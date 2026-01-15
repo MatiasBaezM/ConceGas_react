@@ -17,8 +17,8 @@ function AdminProfiles() {
             <h2 className="mb-4 text-dark">Gestión de Perfiles</h2>
 
             <div className="table-responsive">
-                <Table striped bordered hover variant="dark" className="align-middle">
-                    <thead>
+                <Table hover className="align-middle bg-white">
+                    <thead className="table-light">
                         <tr>
                             <th>ID</th>
                             <th>Nombre Completo</th>
@@ -61,11 +61,11 @@ function AdminProfiles() {
             </Button>
 
             {/* MODAL CREAR USUARIO */}
-            <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered>
-                <Modal.Header closeButton className="bg-dark text-white">
-                    <Modal.Title>Crear Nuevo Usuario</Modal.Title>
+            <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered className="modal-premium">
+                <Modal.Header closeButton className="modal-premium-header">
+                    <Modal.Title className="modal-premium-title">Crear Nuevo Usuario</Modal.Title>
                 </Modal.Header>
-                <Modal.Body className="bg-dark text-white">
+                <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3">
                             <Form.Label>Nombre Completo</Form.Label>
@@ -89,18 +89,18 @@ function AdminProfiles() {
                         </Form.Group>
                     </Form>
                 </Modal.Body>
-                <Modal.Footer className="bg-dark border-secondary">
+                <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowCreateModal(false)}>Cancelar</Button>
-                    <Button variant="success" onClick={() => setShowCreateModal(false)}>Crear Usuario</Button>
+                    <Button variant="success" onClick={() => setShowCreateModal(false)} className="btn-premium">Crear Usuario</Button>
                 </Modal.Footer>
             </Modal>
 
             {/* MODAL EDITAR USUARIO */}
-            <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
-                <Modal.Header closeButton className="bg-dark text-white">
-                    <Modal.Title>Editar Usuario</Modal.Title>
+            <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered className="modal-premium">
+                <Modal.Header closeButton className="modal-premium-header">
+                    <Modal.Title className="modal-premium-title">Editar Usuario</Modal.Title>
                 </Modal.Header>
-                <Modal.Body className="bg-dark text-white">
+                <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3">
                             <Form.Label>Nombre Completo</Form.Label>
@@ -128,9 +128,9 @@ function AdminProfiles() {
                         </Form.Group>
                     </Form>
                 </Modal.Body>
-                <Modal.Footer className="bg-dark border-secondary">
+                <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancelar</Button>
-                    <Button variant="primary" onClick={() => setShowEditModal(false)}>Guardar Cambios</Button>
+                    <Button variant="primary" onClick={() => setShowEditModal(false)} className="btn-premium">Guardar Cambios</Button>
                 </Modal.Footer>
             </Modal>
 

@@ -1,6 +1,6 @@
 import { Navbar as BSNavbar, Nav, Container, NavDropdown, Badge } from 'react-bootstrap';
 import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 // Propiedades que admite el Navbar: funciones para manejar clicks
 interface NavbarProps {

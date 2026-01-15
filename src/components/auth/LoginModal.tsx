@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal, Button, Form, Alert, InputGroup } from 'react-bootstrap';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { formatearRut, validarRut } from '../../utils/rutUtils';
 
 interface LoginModalProps {
@@ -55,9 +55,9 @@ function LoginModal({ show, handleClose, onRecoverClick, onRegisterClick }: Logi
     };
 
     return (
-        <Modal show={show} onHide={handleClose} centered>
-            <Modal.Header closeButton>
-                <Modal.Title className="text-primary-custom">Inicio Sesión</Modal.Title>
+        <Modal show={show} onHide={handleClose} centered className="modal-premium">
+            <Modal.Header closeButton className="modal-premium-header">
+                <Modal.Title className="modal-premium-title">Inicio Sesión</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 {/* Mostrar alerta si hay error */}
@@ -103,7 +103,7 @@ function LoginModal({ show, handleClose, onRecoverClick, onRegisterClick }: Logi
                     </Form.Group>
 
                     <div className="mt-4">
-                        <Button variant="primary" type="submit" className="w-100 mb-2">
+                        <Button className="w-100 mb-2 btn-premium" type="submit">
                             Iniciar
                         </Button>
                         <div className="text-center d-flex flex-column gap-2">

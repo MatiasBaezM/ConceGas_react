@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useState, type ReactNode } from 'react';
 
 // Definimos los tipos de roles y usuario
 // Role puede ser 'cliente' o 'admin'
-export type Role = 'cliente' | 'admin';
+export type Role = 'cliente' | 'admin' | 'repartidor';
 
 // Definición de la estructura de un Usuario
 export interface User {
@@ -18,10 +18,11 @@ interface AuthContextType {
     logout: () => void; // Función para cerrar sesión
     isAuthenticated: boolean; // Bandera rápida para saber si está logueado
     isAdmin: boolean; // Bandera rápida para saber si es admin
+    isRepartidor: boolean; // Bandera para repartidor
 }
 
 // Creamos el contexto
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Usuarios "Mock" (falsos/quemados en código para pruebas sin base de datos real)
 const MOCK_USERS = [
@@ -36,12 +37,22 @@ const MOCK_USERS = [
         pass: 'admin123',
         name: 'Administrador',
         role: 'admin' as Role
+    },
+    {
+        rut: '33.333.333-3',
+        pass: 'repartidor123',
+        name: 'Pedro Repartidor',
+        role: 'repartidor' as Role
     }
 ];
 
 // Proveedor del contexto: envuelve la app y da acceso a la autenticación
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
+    // Inicializar estado leyendo de localStorage si existe
+    const [user, setUser] = useState<User | null>(() => {
+        const stored = localStorage.getItem('concegas_user');
+        return stored ? JSON.parse(stored) : null;
+    });
 
     // Lógica de inicio de sesión
     const login = (rut: string, pass: string): boolean => {
@@ -49,12 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const foundUser = MOCK_USERS.find(u => u.rut === rut && u.pass === pass);
 
         if (foundUser) {
-            // Si lo encontramos, guardamos sus datos en el estado
-            setUser({
+            const userData = {
                 rut: foundUser.rut,
                 name: foundUser.name,
                 role: foundUser.role
-            });
+            };
+            // Si lo encontramos, guardamos sus datos en el estado y localStorage
+            setUser(userData);
+            localStorage.setItem('concegas_user', JSON.stringify(userData));
             return true; // Login exitoso
         }
         return false; // Login fallido
@@ -63,6 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Lógica para cerrar sesión
     const logout = () => {
         setUser(null); // Borramos el usuario del estado
+        localStorage.removeItem('concegas_user'); // Borramos de localStorage
+        // Opcional: limpiar también la vista guardada del admin
+        localStorage.removeItem('admin_current_view');
     };
 
     return (
@@ -71,18 +87,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             login,
             logout,
             isAuthenticated: !!user, // Es true si user no es null
-            isAdmin: user?.role === 'admin' // Es true si el rol es admin
+            isAdmin: user?.role === 'admin', // Es true si el rol es admin
+            isRepartidor: user?.role === 'repartidor' // Es true si el rol es repartidor
         }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-// Hook personalizado para usar este contexto fácilmente en cualquier componente
-export function useAuth() {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-}
+// Hook movido a src/hooks/useAuth.ts

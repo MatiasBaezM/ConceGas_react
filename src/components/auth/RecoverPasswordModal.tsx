@@ -22,9 +22,9 @@ function RecoverPasswordModal({ show, handleClose }: RecoverPasswordModalProps) 
     };
 
     return (
-        <Modal show={show} onHide={handleClose} centered>
-            <Modal.Header closeButton>
-                <Modal.Title className="text-primary">Recuperar Contraseña</Modal.Title>
+        <Modal show={show} onHide={handleClose} centered className="modal-premium">
+            <Modal.Header closeButton className="modal-premium-header">
+                <Modal.Title className="modal-premium-title">Recuperar Contraseña</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 {sent ? (
@@ -48,7 +48,7 @@ function RecoverPasswordModal({ show, handleClose }: RecoverPasswordModalProps) 
                                 />
                             </Form.Group>
                             <div className="d-grid">
-                                <Button variant="primary" type="submit">
+                                <Button className="btn-premium" type="submit">
                                     Enviar Instrucciones
                                 </Button>
                             </div>

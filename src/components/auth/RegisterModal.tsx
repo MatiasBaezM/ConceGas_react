@@ -83,9 +83,9 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
     };
 
     return (
-        <Modal show={show} onHide={handleClose} centered size="lg">
-            <Modal.Header closeButton>
-                <Modal.Title className="text-primary-custom">Formulario de Registro</Modal.Title>
+        <Modal show={show} onHide={handleClose} centered size="lg" className="modal-premium">
+            <Modal.Header closeButton className="modal-premium-header">
+                <Modal.Title className="modal-premium-title">Formulario de Registro</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 {success && (
@@ -182,7 +182,7 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
                     </Form.Group>
 
                     <div className="mt-4">
-                        <Button variant="primary" size="lg" type="submit" className="w-100">
+                        <Button size="lg" type="submit" className="w-100 btn-premium">
                             Registrar
                         </Button>
                     </div>

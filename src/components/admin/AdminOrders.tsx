@@ -14,7 +14,9 @@ function AdminOrders() {
         { id: '#0998', client: 'Ana Torres', address: 'Av. Libertad 500', total: 45000, status: 'entregados', assignedTo: 'Luisa Repartidor', products: [{ name: 'Gas Licuado 15kg', qty: 2, price: 22500 }] },
     ];
 
-    const filteredOrders = mockOrders.filter(o => o.status === activeTab);
+    const filteredOrders = activeTab === 'finalizados'
+        ? mockOrders.filter(o => o.status === 'entregados' || o.status === 'sin entrega')
+        : mockOrders.filter(o => o.status === activeTab);
 
     const handleShowDetail = (order: any) => {
         setSelectedOrder(order);
@@ -23,25 +25,26 @@ function AdminOrders() {
 
     const renderOrderTable = () => (
         <div className="table-responsive">
-            <Table striped bordered hover variant="dark" className="align-middle">
-                <thead>
+            <Table hover className="align-middle bg-white">
+                <thead className="table-light">
                     <tr>
                         <th>ID</th>
                         <th>Cliente</th>
                         {activeTab === 'pendientes' && <th>Dirección</th>}
-                        {(activeTab === 'preparacion' || activeTab === 'enviados' || activeTab === 'entregados') && <th>Repartidor</th>}
+                        {(activeTab === 'preparacion' || activeTab === 'enviados' || activeTab === 'finalizados') && <th>Repartidor</th>}
                         <th>Total</th>
                         <th>Estado</th>
-                        {activeTab !== 'entregados' && <th>Acciones</th>}
+                        {activeTab === 'finalizados' && <th>Motivo</th>}
+                        {activeTab !== 'finalizados' && <th>Acciones</th>}
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredOrders.map(order => (
+                    {filteredOrders.map((order: any) => (
                         <tr key={order.id}>
                             <td>{order.id}</td>
                             <td>{order.client}</td>
                             {activeTab === 'pendientes' && <td>{order.address}</td>}
-                            {(activeTab === 'preparacion' || activeTab === 'enviados' || activeTab === 'entregados') && (
+                            {(activeTab === 'preparacion' || activeTab === 'enviados' || activeTab === 'finalizados') && (
                                 <td>
                                     {activeTab === 'preparacion' ? (
                                         <Form.Select size="sm" defaultValue={order.assignedTo || ""}>
@@ -59,12 +62,21 @@ function AdminOrders() {
                                 <Badge bg={
                                     order.status === 'pendientes' ? 'warning' :
                                         order.status === 'preparacion' ? 'info' :
-                                            order.status === 'enviados' ? 'primary' : 'success'
+                                            order.status === 'enviados' ? 'primary' :
+                                                order.status === 'sin entrega' ? 'danger' : 'success'
                                 } text={order.status === 'pendientes' || order.status === 'preparacion' ? 'dark' : 'white'}>
                                     {order.status.toUpperCase()}
                                 </Badge>
                             </td>
-                            {activeTab !== 'entregados' && (
+                            {activeTab === 'finalizados' && (
+                                <td>
+                                    {order.status === 'sin entrega'
+                                        ? <span className="text-danger small fw-bold">{order.failReason || 'Sin motivo especificado'}</span>
+                                        : <span className="text-muted small">N/A</span>
+                                    }
+                                </td>
+                            )}
+                            {activeTab !== 'finalizados' && (
                                 <td>
                                     <Button variant="primary" size="sm" onClick={() => handleShowDetail(order)}>
                                         Ver Detalle
@@ -81,7 +93,7 @@ function AdminOrders() {
                     ))}
                     {filteredOrders.length === 0 && (
                         <tr>
-                            <td colSpan={6} className="text-center">No hay pedidos en esta categoría</td>
+                            <td colSpan={activeTab === 'finalizados' ? 7 : 6} className="text-center">No hay pedidos en esta categoría</td>
                         </tr>
                     )}
                 </tbody>
@@ -104,18 +116,18 @@ function AdminOrders() {
                     <Nav.Link eventKey="enviados">Enviados</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                    <Nav.Link eventKey="entregados">Entregados</Nav.Link>
+                    <Nav.Link eventKey="finalizados">Finalizados</Nav.Link>
                 </Nav.Item>
             </Nav>
 
             {renderOrderTable()}
 
             {/* MODAL DETALLE */}
-            <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} size="lg" centered>
-                <Modal.Header closeButton className="bg-dark text-white">
-                    <Modal.Title>Detalle del Pedido {selectedOrder?.id}</Modal.Title>
+            <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} size="lg" centered className="modal-premium">
+                <Modal.Header closeButton className="modal-premium-header">
+                    <Modal.Title className="modal-premium-title">Detalle del Pedido {selectedOrder?.id}</Modal.Title>
                 </Modal.Header>
-                <Modal.Body className="bg-dark text-white">
+                <Modal.Body>
                     {selectedOrder && (
                         <>
                             <Row>
@@ -129,12 +141,18 @@ function AdminOrders() {
                                     <p>
                                         <Badge bg="info">{selectedOrder.status}</Badge>
                                     </p>
+                                    {selectedOrder.failReason && (
+                                        <div className="mt-2 p-2 border border-danger rounded bg-light">
+                                            <small className="text-danger fw-bold">Motivo no entrega:</small>
+                                            <p className="mb-0 small text-muted">{selectedOrder.failReason}</p>
+                                        </div>
+                                    )}
                                 </Col>
                             </Row>
                             <hr className="border-secondary" />
                             <h6 className="fw-bold mt-3">Productos</h6>
-                            <Table variant="dark" size="sm" striped>
-                                <thead>
+                            <Table hover size="sm" className="align-middle">
+                                <thead className="table-light">
                                     <tr>
                                         <th>Producto</th>
                                         <th>Cant.</th>
@@ -160,9 +178,9 @@ function AdminOrders() {
                         </>
                     )}
                 </Modal.Body>
-                <Modal.Footer className="bg-dark border-secondary">
+                <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowDetailModal(false)}>Cerrar</Button>
-                    <Button variant="primary">Imprimir Ticket</Button>
+                    <Button variant="primary" className="btn-premium">Imprimir Ticket</Button>
                 </Modal.Footer>
             </Modal>
         </div>

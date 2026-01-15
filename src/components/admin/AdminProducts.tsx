@@ -1,10 +1,29 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Table, Button, Badge, Modal, Form, Row, Col } from 'react-bootstrap';
+import { formatPrice } from '../../utils/formatters';
 
 function AdminProducts() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // File handling
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+        }
+    };
+
+    const handleSelectImageClick = () => {
+        fileInputRef.current?.click();
+    };
 
     // Mock data based on template
     const products = [
@@ -52,9 +71,9 @@ function AdminProducts() {
             </Button>
 
             {/* MODAL AGREGAR PRODUCTO */}
-            <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
-                <Modal.Header closeButton>
-                    <Modal.Title className="text-primary">Agrega Producto</Modal.Title>
+            <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} className="modal-premium" autoFocus={false}>
+                <Modal.Header closeButton className="modal-premium-header">
+                    <Modal.Title className="modal-premium-title">Agrega Producto</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
@@ -65,7 +84,15 @@ function AdminProducts() {
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Precio ($)</Form.Label>
-                            <Form.Control type="number" placeholder="$ 20.000" required />
+                            <Form.Control
+                                type="text"
+                                placeholder="$ 20.000"
+                                required
+                                onChange={(e) => {
+                                    const formatted = formatPrice(e.target.value);
+                                    e.target.value = formatted;
+                                }}
+                            />
                             <Form.Text className="text-muted">Ingrese el precio para producto</Form.Text>
                         </Form.Group>
                         <Form.Group className="mb-3">
@@ -75,20 +102,50 @@ function AdminProducts() {
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Imagen del producto</Form.Label>
-                            <Button variant="outline-primary" className="w-100 mb-2">Seleccionar imagen</Button>
-                            <Form.Text className="text-muted">JPG, PNG o WEBP</Form.Text>
+
+                            <input
+                                type="file"
+                                style={{ display: 'none' }}
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="image/png, image/jpeg, image/webp"
+                            />
+
+                            <Button
+                                variant="outline-primary"
+                                className="w-100 mb-2"
+                                onClick={handleSelectImageClick}
+                            >
+                                {selectedFile ? 'Cambiar imagen' : 'Seleccionar imagen'}
+                            </Button>
+
+                            {selectedFile ? (
+                                <div className="text-center mt-2">
+                                    <p className="small text-success mb-1">Imagen seleccionada: {selectedFile.name}</p>
+                                    {previewUrl && (
+                                        <img
+                                            src={previewUrl}
+                                            alt="Preview"
+                                            className="img-fluid rounded border"
+                                            style={{ maxHeight: '150px' }}
+                                        />
+                                    )}
+                                </div>
+                            ) : (
+                                <Form.Text className="text-muted">JPG, PNG o WEBP</Form.Text>
+                            )}
                         </Form.Group>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="success" onClick={() => setShowCreateModal(false)}>Crear</Button>
+                    <Button variant="success" onClick={() => setShowCreateModal(false)} className="btn-premium">Crear</Button>
                 </Modal.Footer>
             </Modal>
 
             {/* MODAL EDITAR PRODUCTO */}
-            <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
-                <Modal.Header closeButton>
-                    <Modal.Title className="text-primary">✏️ Editar producto</Modal.Title>
+            <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered className="modal-premium" autoFocus={false}>
+                <Modal.Header closeButton className="modal-premium-header">
+                    <Modal.Title className="modal-premium-title">✏️ Editar producto</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Row className="g-3">
@@ -99,7 +156,15 @@ function AdminProducts() {
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Precio ($)</Form.Label>
-                                <Form.Control type="text" defaultValue="25100" required />
+                                <Form.Control
+                                    type="text"
+                                    defaultValue={formatPrice(25100)}
+                                    required
+                                    onChange={(e) => {
+                                        const formatted = formatPrice(e.target.value);
+                                        e.target.value = formatted;
+                                    }}
+                                />
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Stock</Form.Label>
@@ -115,7 +180,7 @@ function AdminProducts() {
                                 <Form.Label>Imagen del producto</Form.Label>
                                 <Button variant="outline-primary" className="w-100 mb-2">Cambiar imagen</Button>
                                 <div className="text-center">
-                                    <img src="/img/cilindro_15kg.png" className="img-fluid rounded border" style={{ maxHeight: '220px' }} alt="Preview" />
+                                    <img src="/img/productos/cilindro_15kg.png" className="img-fluid rounded border" style={{ maxHeight: '220px' }} alt="Preview" />
                                 </div>
                             </Form.Group>
                         </Col>
@@ -123,7 +188,7 @@ function AdminProducts() {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancelar</Button>
-                    <Button variant="success" onClick={() => setShowEditModal(false)}>Guardar cambios</Button>
+                    <Button variant="success" onClick={() => setShowEditModal(false)} className="btn-premium">Guardar cambios</Button>
                 </Modal.Footer>
             </Modal>
 

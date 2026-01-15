@@ -1,15 +1,44 @@
 import { useState } from 'react';
 import { Container, Table, Button, Card, Row, Col, Form, Alert, Modal } from 'react-bootstrap';
 import { useCart } from '../../context/CartContext';
+import OrderProcessing from './OrderProcessing';
+import OrderSuccess from './OrderSuccess';
 
 function Cart() {
     const { cart, removeFromCart, updateQuantity, clearCart, total } = useCart();
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('');
+    const [checkoutState, setCheckoutState] = useState<'idle' | 'processing' | 'success'>('idle');
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(price);
     };
+
+    const handleOrder = () => {
+        if (!paymentMethod) {
+            alert('Por favor selecciona un método de pago');
+            return;
+        }
+
+        setCheckoutState('processing');
+
+        // Simular proceso de pago (3 segundos)
+        setTimeout(() => {
+            setCheckoutState('success');
+            clearCart();
+        }, 3000);
+    };
+
+    if (checkoutState === 'processing') {
+        return <OrderProcessing />;
+    }
+
+    if (checkoutState === 'success') {
+        return <OrderSuccess onContinue={() => {
+            setCheckoutState('idle');
+            window.location.href = '/';
+        }} />;
+    }
 
     if (cart.length === 0) {
         return (
@@ -144,7 +173,7 @@ function Cart() {
             <div className="d-flex gap-2">
                 <Button variant="outline-danger" onClick={clearCart}>Vaciar carrito</Button>
                 <Button variant="secondary" href="/">Seguir comprando</Button>
-                <Button variant="success">Pedir</Button>
+                <Button variant="success" onClick={handleOrder} className="btn-premium">Pagar y Pedir</Button>
             </div>
 
             {/* MODAL PARA DIRECCIÓN */}
