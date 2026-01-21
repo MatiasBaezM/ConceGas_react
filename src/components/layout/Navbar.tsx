@@ -14,7 +14,7 @@ function Navbar({ onLoginClick, onRegisterClick, onCartClick, onHomeClick }: Nav
     // Obtenemos la cantidad de items del carrito para mostrar en la burbuja roja
     const { itemCount } = useCart();
     // Obtenemos estado de autenticación para mostrar nombre de usuario o botón de login
-    const { user, logout, isAuthenticated, isAdmin } = useAuth();
+    const { user, logout, isAuthenticated, isAdmin, isRepartidor } = useAuth();
 
     return (
         // Componente Navbar de React-Bootstrap con tema oscuro
@@ -101,26 +101,28 @@ function Navbar({ onLoginClick, onRegisterClick, onCartClick, onHomeClick }: Nav
                             )}
                         </NavDropdown>
 
-                        {/* Icono del Carrito de Compras */}
-                        <Nav.Link href="#" onClick={(e) => { e.preventDefault(); onCartClick?.(); }} className="position-relative">
-                            <img
-                                src="/img/carro.png"
-                                alt="ConceGas"
-                                width="30"
-                                height="30"
-                                className="d-inline-block align-text-top"
-                            />
-                            {/* Burbuja roja con contador si hay productos */}
-                            {itemCount > 0 && (
-                                <Badge
-                                    pill
-                                    bg="danger"
-                                    className="position-absolute top-0 start-100 translate-middle"
-                                >
-                                    {itemCount}
-                                </Badge>
-                            )}
-                        </Nav.Link>
+                        {/* Icono del Carrito de Compras - Oculto para admin y repartidor */}
+                        {!isAdmin && !isRepartidor && (
+                            <Nav.Link href="#" onClick={(e) => { e.preventDefault(); onCartClick?.(); }} className="position-relative">
+                                <img
+                                    src="/img/carro.png"
+                                    alt="ConceGas"
+                                    width="30"
+                                    height="30"
+                                    className="d-inline-block align-text-top"
+                                />
+                                {/* Burbuja roja con contador si hay productos */}
+                                {itemCount > 0 && (
+                                    <Badge
+                                        pill
+                                        bg="danger"
+                                        className="position-absolute top-0 start-100 translate-middle"
+                                    >
+                                        {itemCount}
+                                    </Badge>
+                                )}
+                            </Nav.Link>
+                        )}
                     </Nav>
                 </BSNavbar.Collapse>
             </Container>

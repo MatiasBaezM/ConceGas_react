@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import Navbar from '../components/layout/Navbar';
 import LoginModal from '../components/auth/LoginModal';
@@ -6,8 +6,9 @@ import RegisterModal from '../components/auth/RegisterModal';
 import ProductCard from '../components/shop/ProductCard';
 import Footer from '../components/layout/Footer';
 import Cart from '../components/shop/Cart';
-import products from '../../public/data/productos.json';
 import RecoverPasswordModal from '../components/auth/RecoverPasswordModal';
+import { productService } from '../services/productService';
+import type { Product } from '../types';
 
 export default function HomePage() {
     // Estados para controlar qué modales o vistas se muestran
@@ -15,6 +16,11 @@ export default function HomePage() {
     const [showRegister, setShowRegister] = useState(false);
     const [showRecover, setShowRecover] = useState(false);
     const [showCart, setShowCart] = useState(false);
+    const [products, setProducts] = useState<Product[]>([]);
+
+    useEffect(() => {
+        setProducts(productService.getAll());
+    }, []);
 
     return (
         <>
@@ -44,7 +50,7 @@ export default function HomePage() {
 
                     <Container className="mt-4">
                         <Row>
-                            {/* Mapeamos la lista de productos del JSON para crear tarjetas */}
+                            {/* Mapeamos la lista de productos obtenida del servicio */}
                             {products.map((product) => (
                                 <Col sm={4} key={product.id} className="mb-4">
                                     <ProductCard {...product} />

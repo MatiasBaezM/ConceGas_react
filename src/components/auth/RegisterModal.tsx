@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import { formatearRut, validarRut } from '../../utils/rutUtils';
 import { isValidChileanPhone } from '../../utils/validationUtils';
+import { profileService } from '../../services/profileService';
+import type { UserProfile } from '../../types';
 
 interface RegisterModalProps {
     show: boolean;
@@ -74,26 +76,46 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
             return;
         }
 
-        // Aquí iría la lógica de registro (API)
-        console.log('Register attempt:', formData);
-        setSuccess(true);
+        try {
+            // Construir el objeto de usuario
+            const newUser: UserProfile = {
+                rut: formData.rut,
+                name: formData.nombre,
+                email: formData.email,
+                telefono: formData.telefono,
+                pass: formData.pass,
+                role: 'cliente' // Por defecto registra clientes
+            };
 
-        // Opcional: Cerrar modal después de unos segundos
-        setTimeout(() => {
-            setSuccess(false);
-            handleClose();
-            // Limpiar formulario
-            setFormData({
-                rut: '',
-                nombre: '',
-                email: '',
-                telefono: '',
-                pass: '',
-                repass: ''
-            });
-            setIsRutValid(true);
-            setIsPhoneValid(true);
-        }, 2000);
+            // Intentar crear el usuario en el servicio (localStorage)
+            profileService.create(newUser);
+
+            setSuccess(true);
+
+            // Cerrar modal después de unos segundos
+            setTimeout(() => {
+                setSuccess(false);
+                handleClose();
+                // Limpiar formulario
+                setFormData({
+                    rut: '',
+                    nombre: '',
+                    email: '',
+                    telefono: '',
+                    pass: '',
+                    repass: ''
+                });
+                setIsRutValid(true);
+                setIsPhoneValid(true);
+            }, 2000);
+
+        } catch (error) {
+            if (error instanceof Error) {
+                alert(error.message); // Muestra error si el RUT ya existe, etc.
+            } else {
+                alert('Ocurrió un error desconocido al registrar');
+            }
+        }
     };
 
     return (

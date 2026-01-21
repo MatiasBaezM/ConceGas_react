@@ -4,9 +4,19 @@ export interface Product {
     price: number;
     description: string;
     image: string;
+    stock?: number;
 }
 
 export type Role = 'cliente' | 'admin' | 'repartidor';
+
+export interface Address {
+    id: string;
+    alias: string;
+    street: string;
+    comuna: string;
+    city: string;
+    reference?: string;
+}
 
 export interface UserProfile {
     rut: string;
@@ -15,6 +25,7 @@ export interface UserProfile {
     pass: string;
     email: string;
     telefono: string;
+    addresses?: Address[];
 }
 
 export interface OrderItem {
@@ -32,8 +43,10 @@ export interface Order {
     items: OrderItem[];
     total: number;
     status: 'pendiente' | 'despachado' | 'entregado' | 'cancelado' | 'preparacion' | 'enviados' | 'sin entrega' | 'entregados';
-    paymentMethod: 'efectivo' | 'transferencia';
+    paymentMethod: 'efectivo' | 'transferencia' | 'tarjeta';
     address: string;
     assignedTo?: string;
     failReason?: string;
+    comuna?: string;
+    reference?: string;
 }

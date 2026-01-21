@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Modal, Button, Form, Alert, InputGroup } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
-import { formatearRut, validarRut } from '../../utils/rutUtils';
+
 
 interface LoginModalProps {
     show: boolean;
@@ -12,45 +12,25 @@ interface LoginModalProps {
 
 function LoginModal({ show, handleClose, onRecoverClick, onRegisterClick }: LoginModalProps) {
     const { login } = useAuth(); // Hook de autenticación
-    const [rut, setRut] = useState('');
+    const [email, setEmail] = useState('');
     const [pass, setPass] = useState('');
     const [error, setError] = useState('');
     const [showPass, setShowPass] = useState(false); // Estado para mostrar/ocultar contraseña
-    const [isRutValid, setIsRutValid] = useState(true);
-
-    // Formatear RUT mientras el usuario escribe
-    const handleRutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        setRut(formatearRut(val));
-        setIsRutValid(true); // Reset validation state while typing
-    };
-
-    // Validar RUT cuando el usuario deja el campo
-    const handleRutBlur = () => {
-        if (rut.length > 1) {
-            setIsRutValid(validarRut(rut));
-        }
-    };
 
     // Manejar envío del formulario
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
-        if (!validarRut(rut)) {
-            setIsRutValid(false);
-            return;
-        }
-
         // Intentar loguear con el contexto
-        const success = login(rut, pass);
+        const success = login(email, pass);
         if (success) {
             handleClose();
             // Limpiar campos si fue exitoso
-            setRut('');
+            setEmail('');
             setPass('');
         } else {
-            setError('Credenciales inválidas. Intente nuevamenta.\n(Demo: Cliente: 11.111.111-1 / admin: 22.222.222-2)');
+            setError('Credenciales inválidas. Intente nuevamente.');
         }
     };
 
@@ -64,23 +44,15 @@ function LoginModal({ show, handleClose, onRecoverClick, onRegisterClick }: Logi
                 {error && <Alert variant="danger" style={{ whiteSpace: 'pre-line' }}>{error}</Alert>}
 
                 <Form onSubmit={handleSubmit}>
-                    <Form.Group className="mb-3" controlId="rut">
-                        <Form.Label>Rut</Form.Label>
+                    <Form.Group className="mb-3" controlId="email">
+                        <Form.Label>Correo Electrónico</Form.Label>
                         <Form.Control
-                            type="text"
-                            placeholder="12.345.678-9"
-                            value={rut}
-                            onChange={handleRutChange}
-                            onBlur={handleRutBlur}
-                            isInvalid={!isRutValid} // Bootstrap styling for invalid check
+                            type="email"
+                            placeholder="nombre@ejemplo.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
                         />
-                        <Form.Control.Feedback type="invalid">
-                            Rut inválido
-                        </Form.Control.Feedback>
-                        <Form.Text className="text-muted">
-                            Ingrese rut sin puntos con guión
-                        </Form.Text>
                     </Form.Group>
 
                     <Form.Group className="mb-3" controlId="pass">

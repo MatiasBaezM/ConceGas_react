@@ -38,10 +38,10 @@ export const orderService = {
         setStoredOrders(orders);
     },
 
-    updateStatus: (id: string, newStatus: Order['status']): void => {
+    updateStatus: (id: string, newStatus: Order['status'], assignedTo?: string, failReason?: string): void => {
         let orders = orderService.getAll();
         orders = orders.map(o =>
-            o.id === id ? { ...o, status: newStatus } : o
+            o.id === id ? { ...o, status: newStatus, assignedTo: assignedTo || o.assignedTo, failReason: failReason || o.failReason } : o
         );
         setStoredOrders(orders);
     },

@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, type ReactNode } from 'react';
-import type { Role } from '../types';
+import type { Role, Address } from '../types';
 import { profileService } from '../services/profileService';
 
 // Definición de la estructura de un Usuario en sesión (sin password)
@@ -10,12 +10,13 @@ export interface User {
     role: Role;
     email: string;
     telefono: string;
+    addresses?: Address[];
 }
 
 // Interfaz que define qué datos y funciones compartirá este contexto
 interface AuthContextType {
     user: User | null; // El usuario actual, o null si no hay nadie conectado
-    login: (rut: string, pass: string) => boolean; // Función para iniciar sesión
+    login: (email: string, pass: string) => boolean; // Función para iniciar sesión
     logout: () => void; // Función para cerrar sesión
     isAuthenticated: boolean; // Bandera rápida para saber si está logueado
     isAdmin: boolean; // Bandera rápida para saber si es admin
@@ -34,9 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // Lógica de inicio de sesión
-    const login = (rut: string, pass: string): boolean => {
+    const login = (email: string, pass: string): boolean => {
         // Usamos el servicio de perfiles para validar credenciales
-        const foundUser = profileService.validateCredentials(rut, pass);
+        const foundUser = profileService.validateCredentials(email, pass);
 
         if (foundUser) {
             const userData: User = {
@@ -44,7 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 name: foundUser.name,
                 role: foundUser.role,
                 email: foundUser.email,
-                telefono: foundUser.telefono
+                telefono: foundUser.telefono,
+                addresses: foundUser.addresses
             };
             // Si lo encontramos, guardamos sus datos en el estado y localStorage
             setUser(userData);

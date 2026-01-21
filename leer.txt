@@ -1,0 +1,18 @@
+Credenciales de Acceso:
+
+-------------------------------------------------
+Rol: Cliente
+Email: cliente@concegas.cl
+Contraseña: cliente123
+Nombre: Juan Pérez
+-------------------------------------------------
+Rol: Administrador
+Email: admin@concegas.cl
+Contraseña: admin123
+Nombre: Administrador
+-------------------------------------------------
+Rol: Repartidor
+Email: repartidor@concegas.cl
+Contraseña: repartidor123
+Nombre: Pedro Repartidor
+-------------------------------------------------

@@ -1,16 +1,42 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Table, Button, Badge, Modal, Form, Row, Col } from 'react-bootstrap';
 import { formatPrice } from '../../utils/formatters';
+import { productService } from '../../services/productService';
+import type { Product } from '../../types';
 
 function AdminProducts() {
+    const [products, setProducts] = useState<Product[]>([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
+
+    // Edit state
     const [showEditModal, setShowEditModal] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+    // Delete state
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+
+    // Form states
+    const [formData, setFormData] = useState<Partial<Product>>({
+        name: '',
+        price: 0,
+        description: '',
+        stock: 0,
+        image: ''
+    });
 
     // File handling
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadProducts();
+    }, []);
+
+    const loadProducts = () => {
+        setProducts(productService.getAll());
+    };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -18,6 +44,13 @@ function AdminProducts() {
             setSelectedFile(file);
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
+
+            // Convert to Base64 for storage
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, image: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -25,10 +58,91 @@ function AdminProducts() {
         fileInputRef.current?.click();
     };
 
-    // Mock data based on template
-    const products = [
-        { name: 'Gas Licuado 15 kg', price: 25100, desc: 'Cilindro de gas para cocina y calefón', stock: 18 }
-    ];
+    const resetForm = () => {
+        setFormData({
+            name: '',
+            price: 0,
+            description: '',
+            stock: 0,
+            image: ''
+        });
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setEditingProduct(null);
+    };
+
+    const handleCreateClick = () => {
+        resetForm();
+        setShowCreateModal(true);
+    };
+
+    const handleEditClick = (product: Product) => {
+        setEditingProduct(product);
+        setFormData({
+            name: product.name,
+            price: product.price,
+            description: product.description,
+            stock: product.stock || 0, // Ensure type has stock if added, otherwise handle optional
+            image: product.image
+        });
+        setPreviewUrl(product.image || null);
+        setShowEditModal(true);
+    };
+
+    const handleDeleteClick = (id: string) => {
+        setDeletingProductId(id);
+        setShowDeleteModal(true);
+    };
+
+    const handleCreateSubmit = () => {
+        try {
+            const newProduct: Product = {
+                id: `prod-${Date.now()}`,
+                name: formData.name || 'Nuevo Producto',
+                price: Number(formData.price) || 0,
+                description: formData.description || '',
+                image: formData.image || '/img/productos/cilindro_15kg.png', // Default image
+                stock: Number(formData.stock) || 0
+            };
+
+            productService.create(newProduct);
+            loadProducts();
+            setShowCreateModal(false);
+            resetForm();
+            alert('Producto creado correctamente');
+        } catch (error) {
+            console.error(error);
+            alert('Error al crear producto');
+        }
+    };
+
+    const handleEditSubmit = () => {
+        if (!editingProduct) return;
+
+        try {
+            productService.update(editingProduct.id, {
+                ...formData,
+                price: Number(formData.price),
+                stock: Number(formData.stock) || 0
+            });
+            loadProducts();
+            setShowEditModal(false);
+            resetForm();
+            alert('Producto actualizado correctamente');
+        } catch (error) {
+            console.error(error);
+            alert('Error al actualizar producto');
+        }
+    };
+
+    const handleDeleteConfirm = () => {
+        if (deletingProductId) {
+            productService.delete(deletingProductId);
+            loadProducts();
+            setShowDeleteModal(false);
+            setDeletingProductId(null);
+        }
+    };
 
     return (
         <div>
@@ -46,17 +160,22 @@ function AdminProducts() {
                         </tr>
                     </thead>
                     <tbody>
-                        {products.map((prod, idx) => (
-                            <tr key={idx}>
-                                <td>{prod.name}</td>
-                                <td>${prod.price.toLocaleString('es-CL')}</td>
-                                <td>{prod.desc}</td>
-                                <td><Badge bg="success">Stock: {prod.stock}</Badge></td>
+                        {products.map((prod) => (
+                            <tr key={prod.id}>
                                 <td>
-                                    <Button variant="warning" size="sm" className="me-2" onClick={() => setShowEditModal(true)}>
+                                    <div className="d-flex align-items-center">
+                                        {prod.image && <img src={prod.image} alt={prod.name} width="40" className="me-2 rounded" />}
+                                        {prod.name}
+                                    </div>
+                                </td>
+                                <td>{formatPrice(prod.price)}</td>
+                                <td><small className="text-muted">{prod.description}</small></td>
+                                <td><Badge bg={prod.stock && prod.stock > 5 ? "success" : "warning"}>Stock: {prod.stock || 0}</Badge></td>
+                                <td>
+                                    <Button variant="warning" size="sm" className="me-2" onClick={() => handleEditClick(prod)}>
                                         Editar
                                     </Button>
-                                    <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)}>
+                                    <Button variant="danger" size="sm" onClick={() => handleDeleteClick(prod.id)}>
                                         Eliminar
                                     </Button>
                                 </td>
@@ -66,7 +185,7 @@ function AdminProducts() {
                 </Table>
             </div>
 
-            <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+            <Button variant="primary" onClick={handleCreateClick}>
                 Agregar producto
             </Button>
 
@@ -79,26 +198,43 @@ function AdminProducts() {
                     <Form>
                         <Form.Group className="mb-3">
                             <Form.Label>Nombre</Form.Label>
-                            <Form.Control type="text" placeholder="Name" required />
-                            <Form.Text className="text-muted">Ingrese el nombre del producto</Form.Text>
+                            <Form.Control
+                                type="text"
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                placeholder="Nombre del producto"
+                                required
+                            />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Precio ($)</Form.Label>
                             <Form.Control
-                                type="text"
-                                placeholder="$ 20.000"
+                                type="number"
+                                value={formData.price}
+                                onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                                placeholder="20000"
                                 required
-                                onChange={(e) => {
-                                    const formatted = formatPrice(e.target.value);
-                                    e.target.value = formatted;
-                                }}
                             />
-                            <Form.Text className="text-muted">Ingrese el precio para producto</Form.Text>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Stock</Form.Label>
+                            <Form.Control
+                                type="number"
+                                value={formData.stock}
+                                onChange={e => setFormData({ ...formData, stock: Number(e.target.value) })}
+                                placeholder="0"
+                                required
+                            />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Descripcion</Form.Label>
-                            <Form.Control type="text" placeholder=" " required />
-                            <Form.Text className="text-muted">Ingrese descripcion del producto</Form.Text>
+                            <Form.Control
+                                type="text"
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                placeholder="Descripción corta"
+                                required
+                            />
                         </Form.Group>
                         <Form.Group className="mb-3">
                             <Form.Label>Imagen del producto</Form.Label>
@@ -119,26 +255,22 @@ function AdminProducts() {
                                 {selectedFile ? 'Cambiar imagen' : 'Seleccionar imagen'}
                             </Button>
 
-                            {selectedFile ? (
+                            {previewUrl && (
                                 <div className="text-center mt-2">
-                                    <p className="small text-success mb-1">Imagen seleccionada: {selectedFile.name}</p>
-                                    {previewUrl && (
-                                        <img
-                                            src={previewUrl}
-                                            alt="Preview"
-                                            className="img-fluid rounded border"
-                                            style={{ maxHeight: '150px' }}
-                                        />
-                                    )}
+                                    <img
+                                        src={previewUrl}
+                                        alt="Preview"
+                                        className="img-fluid rounded border"
+                                        style={{ maxHeight: '150px' }}
+                                    />
                                 </div>
-                            ) : (
-                                <Form.Text className="text-muted">JPG, PNG o WEBP</Form.Text>
                             )}
                         </Form.Group>
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="success" onClick={() => setShowCreateModal(false)} className="btn-premium">Crear</Button>
+                    <Button variant="secondary" onClick={() => setShowCreateModal(false)}>Cancelar</Button>
+                    <Button variant="success" onClick={handleCreateSubmit} className="btn-premium">Crear</Button>
                 </Modal.Footer>
             </Modal>
 
@@ -152,35 +284,55 @@ function AdminProducts() {
                         <Col md={7}>
                             <Form.Group className="mb-3">
                                 <Form.Label>Nombre</Form.Label>
-                                <Form.Control type="text" defaultValue="Gas Licuado 15 kg" required />
+                                <Form.Control
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                />
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Precio ($)</Form.Label>
                                 <Form.Control
-                                    type="text"
-                                    defaultValue={formatPrice(25100)}
-                                    required
-                                    onChange={(e) => {
-                                        const formatted = formatPrice(e.target.value);
-                                        e.target.value = formatted;
-                                    }}
+                                    type="number"
+                                    value={formData.price}
+                                    onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Stock</Form.Label>
-                                <Form.Control type="number" defaultValue="18" required />
+                                <Form.Control
+                                    type="number"
+                                    value={formData.stock}
+                                    onChange={e => setFormData({ ...formData, stock: Number(e.target.value) })}
+                                />
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Descripción</Form.Label>
-                                <Form.Control as="textarea" rows={3} defaultValue="Cilindro de gas para cocina y calefón" required />
+                                <Form.Control
+                                    as="textarea"
+                                    rows={3}
+                                    value={formData.description}
+                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                />
                             </Form.Group>
                         </Col>
                         <Col md={5}>
                             <Form.Group className="mb-3">
                                 <Form.Label>Imagen del producto</Form.Label>
-                                <Button variant="outline-primary" className="w-100 mb-2">Cambiar imagen</Button>
+                                <input
+                                    type="file"
+                                    style={{ display: 'none' }}
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    accept="image/png, image/jpeg, image/webp"
+                                />
+                                <Button variant="outline-primary" className="w-100 mb-2" onClick={handleSelectImageClick}>
+                                    Cambiar imagen
+                                </Button>
                                 <div className="text-center">
-                                    <img src="/img/productos/cilindro_15kg.png" className="img-fluid rounded border" style={{ maxHeight: '220px' }} alt="Preview" />
+                                    {previewUrl && (
+                                        <img src={previewUrl} className="img-fluid rounded border" style={{ maxHeight: '220px' }} alt="Preview" />
+                                    )}
                                 </div>
                             </Form.Group>
                         </Col>
@@ -188,7 +340,7 @@ function AdminProducts() {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancelar</Button>
-                    <Button variant="success" onClick={() => setShowEditModal(false)} className="btn-premium">Guardar cambios</Button>
+                    <Button variant="success" onClick={handleEditSubmit} className="btn-premium">Guardar cambios</Button>
                 </Modal.Footer>
             </Modal>
 
@@ -202,7 +354,7 @@ function AdminProducts() {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancelar</Button>
-                    <Button variant="danger" onClick={() => setShowDeleteModal(false)}>Eliminar</Button>
+                    <Button variant="danger" onClick={handleDeleteConfirm}>Eliminar</Button>
                 </Modal.Footer>
             </Modal>
         </div>

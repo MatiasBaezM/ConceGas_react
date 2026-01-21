@@ -1,34 +1,12 @@
 import type { UserProfile } from '../types';
 import { isValidChileanPhone } from '../utils/validationUtils';
 
-const STORAGE_KEY = 'concegas_users';
+const STORAGE_KEY = 'concegas_users_v2';
 
-const INITIAL_USERS: UserProfile[] = [
-    {
-        rut: '11.111.111-1',
-        pass: 'cliente123',
-        name: 'Juan Pérez',
-        role: 'cliente',
-        email: 'cliente@concegas.cl',
-        telefono: '912345678'
-    },
-    {
-        rut: '22.222.222-2',
-        pass: 'admin123',
-        name: 'Administrador',
-        role: 'admin',
-        email: 'admin@concegas.cl',
-        telefono: '987654321'
-    },
-    {
-        rut: '33.333.333-3',
-        pass: 'repartidor123',
-        name: 'Pedro Repartidor',
-        role: 'repartidor',
-        email: 'repartidor@concegas.cl',
-        telefono: '955555555'
-    }
-];
+import initialData from '../../public/data/perfiles.json';
+
+// Cast the imported JSON to our typed interface
+const INITIAL_USERS: UserProfile[] = initialData as UserProfile[];
 
 const getStoredUsers = (): UserProfile[] => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -89,8 +67,9 @@ export const profileService = {
         setStoredUsers(users);
     },
 
-    validateCredentials: (rut: string, pass: string): UserProfile | undefined => {
+    validateCredentials: (email: string, pass: string): UserProfile | undefined => {
         const users = profileService.getAll();
-        return users.find(u => u.rut === rut && u.pass === pass);
+        // Check case-insensitive email
+        return users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.pass === pass);
     }
 };

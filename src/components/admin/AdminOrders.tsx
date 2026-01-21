@@ -1,70 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Nav, Table, Button, Badge, Modal, Row, Col, Form } from 'react-bootstrap';
-import type { Order } from '../../types';
+import type { Order, UserProfile } from '../../types';
+import { orderService } from '../../services/orderService';
+import { profileService } from '../../services/profileService';
 
 function AdminOrders() {
     const [activeTab, setActiveTab] = useState('pendiente');
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-    // Datos mock para demostración - Typed as Order[]
-    const mockOrders: Order[] = [
-        {
-            id: '#1001',
-            date: new Date().toISOString(),
-            customerRut: '1-9',
-            customerName: 'Juan Pérez',
-            address: 'Av. Siempre Viva 123',
-            total: 25100,
-            status: 'pendiente',
-            paymentMethod: 'efectivo',
-            items: [{ id: 'p1', name: 'Gas Licuado 15kg', qty: 1, price: 25100 }]
-        },
-        {
-            id: '#1000',
-            date: new Date().toISOString(),
-            customerRut: '2-7',
-            customerName: 'Maria Garcia',
-            address: 'Calle Falsa 123',
-            total: 50200,
-            status: 'preparacion',
-            assignedTo: 'Pedro Repartidor',
-            paymentMethod: 'transferencia',
-            items: [{ id: 'p2', name: 'Gas Licuado 45kg', qty: 1, price: 50200 }]
-        },
-        {
-            id: '#0999',
-            date: new Date().toISOString(),
-            customerRut: '3-5',
-            customerName: 'Carlos Lopez',
-            address: 'Psje. 1',
-            total: 15000,
-            status: 'enviados',
-            assignedTo: 'Pedro Repartidor',
-            paymentMethod: 'efectivo',
-            items: [{ id: 'p3', name: 'Gas Licuado 5kg', qty: 1, price: 15000 }]
-        },
-        {
-            id: '#0998',
-            date: new Date().toISOString(),
-            customerRut: '4-3',
-            customerName: 'Ana Torres',
-            address: 'Av. Libertad 500',
-            total: 45000,
-            status: 'entregados',
-            assignedTo: 'Luisa Repartidor',
-            paymentMethod: 'transferencia',
-            items: [{ id: 'p4', name: 'Gas Licuado 15kg', qty: 2, price: 22500 }]
-        },
-    ];
+    const [orders, setOrders] = useState<Order[]>([]);
+
+    // Repartidores state
+    const [repartidores, setRepartidores] = useState<UserProfile[]>([]);
+
+    useEffect(() => {
+        loadOrders();
+        // Load repartidores
+        const allUsers = profileService.getAll();
+        setRepartidores(allUsers.filter(u => u.role === 'repartidor'));
+    }, []);
+
+    const loadOrders = () => {
+        setOrders(orderService.getAll());
+    };
+
+    // Auto-refresh periodically to see new orders
+    useEffect(() => {
+        const interval = setInterval(() => {
+            loadOrders();
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     const filteredOrders = activeTab === 'finalizados'
-        ? mockOrders.filter(o => o.status === 'entregados' || o.status === 'sin entrega')
-        : mockOrders.filter(o => o.status === activeTab);
+        ? orders.filter(o => o.status === 'entregados' || o.status === 'sin entrega')
+        : orders.filter(o => o.status === activeTab);
 
     const handleShowDetail = (order: Order) => {
         setSelectedOrder(order);
         setShowDetailModal(true);
+    };
+
+    const handleAccept = (id: string) => {
+        orderService.updateStatus(id, 'preparacion');
+        loadOrders();
+    };
+
+    const handleAssign = (id: string, repartidorName: string) => {
+        if (!repartidorName) return;
+        orderService.updateStatus(id, 'enviados', repartidorName);
+        loadOrders();
     };
 
     const renderOrderTable = () => (
@@ -91,13 +77,18 @@ function AdminOrders() {
                             {(activeTab === 'preparacion' || activeTab === 'enviados' || activeTab === 'finalizados') && (
                                 <td>
                                     {activeTab === 'preparacion' ? (
-                                        <Form.Select size="sm" defaultValue={order.assignedTo || ""}>
-                                            <option value="">Sin asignar</option>
-                                            <option value="Pedro">Pedro Repartidor</option>
-                                            <option value="Luisa">Luisa Repartidor</option>
+                                        <Form.Select
+                                            size="sm"
+                                            defaultValue=""
+                                            onChange={(e) => handleAssign(order.id, e.target.value)}
+                                        >
+                                            <option value="">Asignar Repartidor...</option>
+                                            {repartidores.map(rep => (
+                                                <option key={rep.rut} value={rep.name}>{rep.name}</option>
+                                            ))}
                                         </Form.Select>
                                     ) : (
-                                        order.assignedTo
+                                        order.assignedTo || <span className="text-muted">Sin asignar</span>
                                     )}
                                 </td>
                             )}
@@ -126,10 +117,14 @@ function AdminOrders() {
                                         Ver Detalle
                                     </Button>
                                     {activeTab === 'pendiente' && (
-                                        <Button variant="outline-light" size="sm" className="ms-1">Aceptar</Button>
-                                    )}
-                                    {activeTab === 'preparacion' && (
-                                        <Button variant="success" size="sm" className="ms-1">Marcar Listo</Button>
+                                        <Button
+                                            variant="success"
+                                            size="sm"
+                                            className="ms-1"
+                                            onClick={() => handleAccept(order.id)}
+                                        >
+                                            Aceptar
+                                        </Button>
                                     )}
                                 </td>
                             )}
