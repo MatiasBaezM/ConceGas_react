@@ -1,48 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Container, Table, Button, Badge, Modal, Form, Card, Nav } from 'react-bootstrap';
 import Navbar from '../components/layout/Navbar';
 import { useAuth } from '../hooks/useAuth';
+import type { Order } from '../types';
+
+// Mock initial orders (simulating what comes from DB)
+// Adjusted to match Order interface
+const initialOrders: Order[] = [
+    {
+        id: '#1000',
+        date: new Date().toISOString(),
+        customerRut: '11.111.111-1',
+        customerName: 'Maria Garcia',
+        address: 'Calle Falsa 123',
+        status: 'preparacion',
+        assignedTo: 'Pedro Repartidor',
+        items: [{ id: 'gas45', name: 'Gas Licuado 45kg', qty: 1, price: 50200 }],
+        total: 50200,
+        paymentMethod: 'efectivo'
+    },
+    {
+        id: '#0999',
+        date: new Date().toISOString(),
+        customerRut: '22.222.222-2',
+        customerName: 'Carlos Lopez',
+        address: 'Psje. 1',
+        status: 'enviados',
+        assignedTo: 'Pedro Repartidor',
+        items: [{ id: 'gas5', name: 'Gas Licuado 5kg', qty: 1, price: 15000 }],
+        total: 15000,
+        paymentMethod: 'transferencia'
+    }
+];
 
 export default function RepartidorPage() {
     const { user } = useAuth();
-    const [orders, setOrders] = useState<any[]>([]);
+    const [orders, setOrders] = useState<Order[]>(() => {
+        const stored = localStorage.getItem('repartidor_orders');
+        return stored ? JSON.parse(stored) : initialOrders;
+    });
     const [showFailModal, setShowFailModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [reason, setReason] = useState('');
     const [activeTab, setActiveTab] = useState('recibidos');
 
-    // Mock initial orders (simulating what comes from DB)
-    const initialOrders = [
-        {
-            id: '#1000',
-            client: 'Maria Garcia',
-            address: 'Calle Falsa 123',
-            status: 'preparacion',
-            assignedTo: 'Pedro Repartidor',
-            products: [{ name: 'Gas Licuado 45kg', qty: 1, price: 50200 }]
-        },
-        {
-            id: '#0999',
-            client: 'Carlos Lopez',
-            address: 'Psje. 1',
-            status: 'enviados',
-            assignedTo: 'Pedro Repartidor',
-            products: [{ name: 'Gas Licuado 5kg', qty: 1, price: 15000 }]
-        }
-    ];
-
-    useEffect(() => {
-        // Load orders from localStorage or use initial Mock
-        const stored = localStorage.getItem('repartidor_orders');
-        if (stored) {
-            setOrders(JSON.parse(stored));
-        } else {
-            setOrders(initialOrders);
-        }
-    }, []);
-
-    const updateOrderStatus = (orderId: string, newStatus: string, failReason?: string) => {
+    const updateOrderStatus = (orderId: string, newStatus: Order['status'], failReason?: string) => {
         const updatedOrders = orders.map(o => {
             if (o.id === orderId) {
                 return { ...o, status: newStatus, failReason: failReason || undefined };
@@ -53,11 +56,11 @@ export default function RepartidorPage() {
         localStorage.setItem('repartidor_orders', JSON.stringify(updatedOrders));
     };
 
-    const handleDeliverySuccess = (order: any) => {
+    const handleDeliverySuccess = (order: Order) => {
         updateOrderStatus(order.id, 'entregados');
     };
 
-    const handleDeliveryFailClick = (order: any) => {
+    const handleDeliveryFailClick = (order: Order) => {
         setSelectedOrder(order);
         setReason('');
         setShowFailModal(true);
@@ -69,7 +72,7 @@ export default function RepartidorPage() {
         setShowFailModal(false);
     };
 
-    const handleShowDetail = (order: any) => {
+    const handleShowDetail = (order: Order) => {
         setSelectedOrder(order);
         setShowDetailModal(true);
     };
@@ -102,7 +105,7 @@ export default function RepartidorPage() {
                     {filteredOrders.map(order => (
                         <tr key={order.id}>
                             <td>{order.id}</td>
-                            <td>{order.client}</td>
+                            <td>{order.customerName}</td>
                             <td>{order.address}</td>
                             <td>
                                 <Badge bg={
@@ -179,7 +182,7 @@ export default function RepartidorPage() {
                         </Badge>
                     </Card.Header>
                     <Card.Body>
-                        <Card.Title className="fs-5 mb-1">{order.client}</Card.Title>
+                        <Card.Title className="fs-5 mb-1">{order.customerName}</Card.Title>
                         <Card.Text className="text-muted mb-3">
                             📍 {order.address}
                         </Card.Text>
@@ -237,7 +240,7 @@ export default function RepartidorPage() {
             <Container className="my-5">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h2>📦 Panel de Repartidor</h2>
-                    <Badge bg="info" className="fs-6">Hola, {user?.name}</Badge>
+
                 </div>
 
                 <Nav variant="tabs" activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'recibidos')} className="mb-4">
@@ -263,12 +266,12 @@ export default function RepartidorPage() {
                     <Modal.Body>
                         {selectedOrder && (
                             <>
-                                <p><strong>Cliente:</strong> {selectedOrder.client}</p>
+                                <p><strong>Cliente:</strong> {selectedOrder.customerName}</p>
                                 <p><strong>Dirección:</strong> {selectedOrder.address}</p>
                                 <hr />
                                 <h6 className="fw-bold">Productos:</h6>
                                 <ul className="list-group mb-3">
-                                    {selectedOrder.products?.map((p: any, idx: number) => (
+                                    {selectedOrder.items?.map((p, idx) => (
                                         <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
                                             {p.name}
                                             <Badge bg="primary" pill>x{p.qty}</Badge>

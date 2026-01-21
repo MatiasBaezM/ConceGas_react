@@ -1,14 +1,15 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, type ReactNode } from 'react';
+import type { Role } from '../types';
+import { profileService } from '../services/profileService';
 
-// Definimos los tipos de roles y usuario
-// Role puede ser 'cliente' o 'admin'
-export type Role = 'cliente' | 'admin' | 'repartidor';
-
-// Definición de la estructura de un Usuario
+// Definición de la estructura de un Usuario en sesión (sin password)
 export interface User {
     rut: string;
     name: string;
     role: Role;
+    email: string;
+    telefono: string;
 }
 
 // Interfaz que define qué datos y funciones compartirá este contexto
@@ -24,28 +25,6 @@ interface AuthContextType {
 // Creamos el contexto
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Usuarios "Mock" (falsos/quemados en código para pruebas sin base de datos real)
-const MOCK_USERS = [
-    {
-        rut: '11.111.111-1',
-        pass: 'cliente123',
-        name: 'Juan Pérez',
-        role: 'cliente' as Role
-    },
-    {
-        rut: '22.222.222-2',
-        pass: 'admin123',
-        name: 'Administrador',
-        role: 'admin' as Role
-    },
-    {
-        rut: '33.333.333-3',
-        pass: 'repartidor123',
-        name: 'Pedro Repartidor',
-        role: 'repartidor' as Role
-    }
-];
-
 // Proveedor del contexto: envuelve la app y da acceso a la autenticación
 export function AuthProvider({ children }: { children: ReactNode }) {
     // Inicializar estado leyendo de localStorage si existe
@@ -56,14 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Lógica de inicio de sesión
     const login = (rut: string, pass: string): boolean => {
-        // Buscamos si existe un usuario que coincida con rut y pass en nuestra lista Mock
-        const foundUser = MOCK_USERS.find(u => u.rut === rut && u.pass === pass);
+        // Usamos el servicio de perfiles para validar credenciales
+        const foundUser = profileService.validateCredentials(rut, pass);
 
         if (foundUser) {
-            const userData = {
+            const userData: User = {
                 rut: foundUser.rut,
                 name: foundUser.name,
-                role: foundUser.role
+                role: foundUser.role,
+                email: foundUser.email,
+                telefono: foundUser.telefono
             };
             // Si lo encontramos, guardamos sus datos en el estado y localStorage
             setUser(userData);

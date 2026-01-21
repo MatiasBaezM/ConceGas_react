@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import { formatearRut, validarRut } from '../../utils/rutUtils';
+import { isValidChileanPhone } from '../../utils/validationUtils';
 
 interface RegisterModalProps {
     show: boolean;
@@ -19,6 +20,7 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
     const [success, setSuccess] = useState(false);
     const [passwordError, setPasswordError] = useState('');
     const [isRutValid, setIsRutValid] = useState(true);
+    const [isPhoneValid, setIsPhoneValid] = useState(true);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -48,11 +50,22 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
         }
     };
 
+    const handlePhoneBlur = () => {
+        if (formData.telefono.length > 0) {
+            setIsPhoneValid(isValidChileanPhone(formData.telefono));
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!validarRut(formData.rut)) {
             setIsRutValid(false);
+            return;
+        }
+
+        if (!isValidChileanPhone(formData.telefono)) {
+            setIsPhoneValid(false);
             return;
         }
 
@@ -79,6 +92,7 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
                 repass: ''
             });
             setIsRutValid(true);
+            setIsPhoneValid(true);
         }, 2000);
     };
 
@@ -151,8 +165,13 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
                             maxLength={9}
                             value={formData.telefono}
                             onChange={handleChange}
+                            onBlur={handlePhoneBlur}
+                            isInvalid={!isPhoneValid}
                             required
                         />
+                        <Form.Control.Feedback type="invalid">
+                            Teléfono inválido (debe tener 9 dígitos)
+                        </Form.Control.Feedback>
                         <Form.Text className="text-muted">
                             Ingrese teléfono chileno de 9 dígitos (ej: 912345678)
                         </Form.Text>
