@@ -102,6 +102,19 @@ function AdminProducts() {
 
     // Envía el formulario para crear un nuevo producto
     const handleCreateSubmit = () => {
+        if (!formData.name?.trim()) {
+            notify('El nombre del producto es obligatorio', 'Validación', 'warning');
+            return;
+        }
+        if (!formData.price || formData.price <= 0) {
+            notify('El precio debe ser mayor a 0', 'Validación', 'warning');
+            return;
+        }
+        if (formData.stock === undefined || formData.stock < 0) {
+            notify('El stock no puede ser negativo', 'Validación', 'warning');
+            return;
+        }
+
         try {
             const newProduct: Product = {
                 // Generamos un ID único basado en el tiempo actual
@@ -128,6 +141,19 @@ function AdminProducts() {
 
     const handleEditSubmit = () => {
         if (!editingProduct) return;
+
+        if (!formData.name?.trim()) {
+            notify('El nombre del producto es obligatorio', 'Validación', 'warning');
+            return;
+        }
+        if (!formData.price || formData.price <= 0) {
+            notify('El precio debe ser mayor a 0', 'Validación', 'warning');
+            return;
+        }
+        if (formData.stock === undefined || formData.stock < 0) {
+            notify('El stock no puede ser negativo', 'Validación', 'warning');
+            return;
+        }
 
         try {
             productService.update(editingProduct.id, {

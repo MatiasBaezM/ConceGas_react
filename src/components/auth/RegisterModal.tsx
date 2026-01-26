@@ -79,6 +79,11 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
             return;
         }
 
+        if (formData.pass.length < 6) {
+            setPasswordError('La contraseña debe tener al menos 6 caracteres');
+            return;
+        }
+
         try {
             // Construimos el perfil del usuario uniendo Nombre y Apellido ingresados por separado
             const newUser: UserProfile = {

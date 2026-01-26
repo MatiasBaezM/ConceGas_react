@@ -107,6 +107,11 @@ function AdminProfiles() {
             return;
         }
 
+        if (formData.pass.length < 6) {
+            notify('La contraseña debe tener al menos 6 caracteres', 'Validación', 'warning');
+            return;
+        }
+
         try {
             const fullName = `${formData.name} ${formData.surname}`.trim();
 

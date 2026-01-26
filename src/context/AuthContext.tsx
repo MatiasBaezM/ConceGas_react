@@ -11,6 +11,7 @@ export interface User {
     email: string;
     telefono: string;
     addresses?: Address[];
+    token?: string; // Campo para el token de sesión
 }
 
 // Interfaz que define qué datos y funciones compartirá este contexto
@@ -46,7 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 role: foundUser.role,
                 email: foundUser.email,
                 telefono: foundUser.telefono,
-                addresses: foundUser.addresses
+                addresses: foundUser.addresses,
+                token: `fake-jwt-token-${foundUser.rut}` // Simulamos la generación de un token
             };
             // Si lo encontramos, guardamos sus datos en el estado y localStorage
             setUser(userData);
