@@ -4,6 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import { useAuth } from '../hooks/useAuth';
 import type { Order } from '../types';
 import { orderService } from '../services/orderService';
+import ChangePasswordModal from '../components/auth/ChangePasswordModal';
 
 export default function RepartidorPage() {
     const { user } = useAuth();
@@ -26,6 +27,7 @@ export default function RepartidorPage() {
     }, []);
     const [showFailModal, setShowFailModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [showChangePassword, setShowChangePassword] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [reason, setReason] = useState('');
     const [activeTab, setActiveTab] = useState('recibidos');
@@ -230,6 +232,7 @@ export default function RepartidorPage() {
                 onRegisterClick={() => { }}
                 onCartClick={() => { }}
                 onHomeClick={() => { }}
+                onChangePasswordClick={() => setShowChangePassword(true)}
             />
             <Container className="my-5">
                 <div className="d-flex justify-content-between align-items-center mb-4">
@@ -314,7 +317,8 @@ export default function RepartidorPage() {
                     </Modal.Footer>
                 </Modal>
 
-            </Container>
+                <ChangePasswordModal show={showChangePassword} handleClose={() => setShowChangePassword(false)} />
+            </Container >
         </>
     );
 }

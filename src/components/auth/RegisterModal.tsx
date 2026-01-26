@@ -3,6 +3,7 @@ import { Modal, Button, Form, Alert, Row, Col } from 'react-bootstrap';
 import { formatearRut, validarRut } from '../../utils/rutUtils';
 import { isValidChileanPhone } from '../../utils/validationUtils';
 import { profileService } from '../../services/profileService';
+import { useNotification } from '../../context/NotificationContext';
 import type { UserProfile } from '../../types';
 
 interface RegisterModalProps {
@@ -11,6 +12,7 @@ interface RegisterModalProps {
 }
 
 function RegisterModal({ show, handleClose }: RegisterModalProps) {
+    const { notify } = useNotification();
     const [formData, setFormData] = useState({
         rut: '',
         nombre: '',
@@ -113,9 +115,9 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
 
         } catch (error) {
             if (error instanceof Error) {
-                alert(error.message); // Muestra error si el RUT ya existe, etc.
+                notify(error.message, 'Error de Registro', 'danger');
             } else {
-                alert('Ocurrió un error desconocido al registrar');
+                notify('Ocurrió un error desconocido al registrar', 'Error', 'danger');
             }
         }
     };

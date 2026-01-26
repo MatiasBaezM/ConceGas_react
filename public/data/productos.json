@@ -13,7 +13,7 @@
         "price": 25100,
         "description": "Cilindro de gas licuado 15 kg, uso cocina, calefon y estufas",
         "image": "/img/productos/cilindro_15kg.png",
-        "stock": 0
+        "stock": 20
     },
     {
         "id": "prod-000003",

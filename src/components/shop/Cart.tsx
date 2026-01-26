@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../hooks/useAuth';
 import { orderService } from '../../services/orderService';
 import { profileService } from '../../services/profileService';
+import { useNotification } from '../../context/NotificationContext';
 import type { Order, Address } from '../../types';
 import OrderProcessing from './OrderProcessing';
 import OrderSuccess from './OrderSuccess';
@@ -20,6 +21,7 @@ interface CartProps {
 function Cart({ onContinueShopping, onViewOrders }: CartProps) {
     const { cart, removeFromCart, updateQuantity, clearCart, total } = useCart();
     const { user, isAuthenticated } = useAuth();
+    const { notify } = useNotification();
 
     const [showAddressModal, setShowAddressModal] = useState(false);
 
@@ -78,7 +80,7 @@ function Cart({ onContinueShopping, onViewOrders }: CartProps) {
     const handleSaveAddress = () => {
         if (!user) return;
         if (!newAddress.street || !newAddress.comuna) {
-            alert('Por favor complete Dirección y Comuna');
+            notify('Por favor complete Dirección y Comuna', 'Atención', 'warning');
             return;
         }
 
@@ -123,12 +125,12 @@ function Cart({ onContinueShopping, onViewOrders }: CartProps) {
         }
 
         if (!selectedAddress) {
-            alert('Por favor selecciona una dirección de envío');
+            notify('Por favor selecciona una dirección de envío', 'Dato Faltante', 'warning');
             return;
         }
 
         if (!paymentMethod) {
-            alert('Por favor selecciona un método de pago');
+            notify('Por favor selecciona un método de pago', 'Dato Faltante', 'warning');
             return;
         }
 
@@ -174,7 +176,7 @@ function Cart({ onContinueShopping, onViewOrders }: CartProps) {
                 clearCart();
             } catch (error) {
                 console.error(error);
-                alert('Hubo un error al procesar el pedido');
+                notify('Hubo un error al procesar el pedido', 'Error', 'danger');
                 setCheckoutState('idle');
             }
         }, 3000);

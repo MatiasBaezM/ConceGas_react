@@ -3,9 +3,11 @@ import { Table, Button, Badge, Modal, Form, Row, Col } from 'react-bootstrap';
 import { IoEye, IoEyeOff } from 'react-icons/io5';
 import { formatPrice } from '../../utils/formatters';
 import { productService } from '../../services/productService';
+import { useNotification } from '../../context/NotificationContext';
 import type { Product } from '../../types';
 
 function AdminProducts() {
+    const { notify } = useNotification();
     // Estado local para almacenar la lista de productos
     const [products, setProducts] = useState<Product[]>([]);
 
@@ -117,10 +119,10 @@ function AdminProducts() {
             loadProducts(); // Recargamos la lista
             setShowCreateModal(false);
             resetForm();
-            alert('Producto creado correctamente');
+            notify('Producto creado correctamente', 'Éxito', 'success');
         } catch (error) {
             console.error(error);
-            alert('Error al crear producto');
+            notify('Error al crear producto', 'Error', 'danger');
         }
     };
 
@@ -136,10 +138,10 @@ function AdminProducts() {
             loadProducts();
             setShowEditModal(false);
             resetForm();
-            alert('Producto actualizado correctamente');
+            notify('Producto actualizado correctamente', 'Éxito', 'success');
         } catch (error) {
             console.error(error);
-            alert('Error al actualizar producto');
+            notify('Error al actualizar producto', 'Error', 'danger');
         }
     };
 
@@ -164,7 +166,7 @@ function AdminProducts() {
             loadProducts(); // Actualizamos la tabla
         } catch (error) {
             console.error(error);
-            alert('Error al cambiar estado del producto');
+            notify('Error al cambiar estado del producto', 'Error', 'danger');
         }
     };
 

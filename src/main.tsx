@@ -7,13 +7,16 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './assets/css/colores.css';
 import { CartProvider } from './context/CartContext.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
+import { NotificationProvider } from './context/NotificationContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <CartProvider>
-        <App />
-      </CartProvider>
+      <NotificationProvider>
+        <CartProvider>
+          <App />
+        </CartProvider>
+      </NotificationProvider>
     </AuthProvider>
   </StrictMode>,
 )

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Table, Button, Badge, Modal, Form } from 'react-bootstrap';
 import { profileService } from '../../services/profileService';
+import { useNotification } from '../../context/NotificationContext';
 import type { UserProfile, Role } from '../../types';
 import { formatearRut, validarRut } from '../../utils/rutUtils';
 import { isValidChileanPhone } from '../../utils/validationUtils';
 
 function AdminProfiles() {
+    const { notify } = useNotification();
     const [profiles, setProfiles] = useState<UserProfile[]>(() => profileService.getAll());
     const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -120,12 +122,12 @@ function AdminProfiles() {
             loadProfiles();
             setShowCreateModal(false);
             resetForm();
-            alert('Usuario creado correctamente');
+            notify('Usuario creado correctamente', 'Éxito', 'success');
         } catch (error: unknown) {
             if (error instanceof Error) {
-                alert(error.message);
+                notify(error.message, 'Error', 'danger');
             } else {
-                alert('Ocurrió un error desconocido');
+                notify('Ocurrió un error desconocido', 'Error', 'danger');
             }
         }
     };
@@ -155,12 +157,12 @@ function AdminProfiles() {
             loadProfiles();
             setShowEditModal(false);
             resetForm();
-            alert('Usuario actualizado correctamente');
+            notify('Usuario actualizado correctamente', 'Éxito', 'success');
         } catch (error: unknown) {
             if (error instanceof Error) {
-                alert(error.message);
+                notify(error.message, 'Error', 'danger');
             } else {
-                alert('Ocurrió un error desconocido');
+                notify('Ocurrió un error desconocido', 'Error', 'danger');
             }
         }
     };

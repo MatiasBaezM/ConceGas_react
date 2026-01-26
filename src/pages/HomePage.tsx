@@ -8,6 +8,7 @@ import Footer from '../components/layout/Footer';
 import Cart from '../components/shop/Cart';
 import CustomerOrders from '../components/shop/CustomerOrders';
 import RecoverPasswordModal from '../components/auth/RecoverPasswordModal';
+import ChangePasswordModal from '../components/auth/ChangePasswordModal';
 import { productService } from '../services/productService';
 import type { Product } from '../types';
 
@@ -16,6 +17,7 @@ export default function HomePage() {
     const [showLogin, setShowLogin] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
     const [showRecover, setShowRecover] = useState(false);
+    const [showChangePassword, setShowChangePassword] = useState(false);
     const [currentView, setCurrentView] = useState<'home' | 'cart' | 'orders'>('home');
     const [products, setProducts] = useState<Product[]>([]);
 
@@ -31,6 +33,7 @@ export default function HomePage() {
                 onCartClick={() => setCurrentView('cart')}
                 onHomeClick={() => setCurrentView('home')}
                 onOrdersClick={() => setCurrentView('orders')}
+                onChangePasswordClick={() => setShowChangePassword(true)}
             />
 
             {/* Modales de Autenticación */}
@@ -42,6 +45,7 @@ export default function HomePage() {
             />
             <RegisterModal show={showRegister} handleClose={() => setShowRegister(false)} />
             <RecoverPasswordModal show={showRecover} handleClose={() => setShowRecover(false)} />
+            <ChangePasswordModal show={showChangePassword} handleClose={() => setShowChangePassword(false)} />
 
             {/* Renderizado de contenido principal basado en la vista actual */}
             {currentView === 'home' && (
