@@ -1,29 +1,30 @@
 import type { Product } from '../types';
 import initialData from '../../public/data/productos.json';
 
-const STORAGE_KEY = 'concegas_products';
+// Clave para identificar el almacenamiento en el navegador
+const STORAGE_KEY = 'concegas_products_v2';
 
-// Helper to get products from storage
+// ENTRADA DE DATOS: Recupera la información desde el disco (localStorage)
 const getStoredProducts = (): Product[] => {
     const stored = localStorage.getItem(STORAGE_KEY);
+    // Si hay datos guardados, los convierte de texto a objetos utilizables por TypeScript
     if (stored) {
         return JSON.parse(stored);
     }
     return [];
 };
 
-// Helper to save to storage
+// SALIDA DE DATOS: Persiste la información en el navegador
 const setStoredProducts = (products: Product[]) => {
+    // Convierte el objeto de código a texto plano para poder guardarlo físicamente
     localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
 };
 
 export const productService = {
+    // Obtiene todos los productos. Si el almacenamiento está vacío, usa los datos del JSON inicial.
     getAll: (): Product[] => {
         const stored = getStoredProducts();
         if (stored.length === 0) {
-            // Seed with initial data if empty
-            // We map the raw JSON to ensure it matches our interface if needed
-            // The JSON structure matches Product interface exactly
             setStoredProducts(initialData);
             return initialData;
         }
@@ -35,16 +36,19 @@ export const productService = {
         return products.find(p => p.id === id);
     },
 
+    // PROCESAMIENTO: Agrega un nuevo producto a la lista existente
     create: (product: Product): void => {
         const products = productService.getAll();
-        // Check if ID exists
+        // Validación: No permitir IDs duplicados
         if (products.some(p => p.id === product.id)) {
             throw new Error('El producto con este ID ya existe');
         }
         products.push(product);
+        // Persistencia (Salida)
         setStoredProducts(products);
     },
 
+    // Actualiza los datos de un producto existente (nombre, precio, stock, visibilidad, etc.)
     update: (id: string, updatedProduct: Partial<Product>): void => {
         let products = productService.getAll();
         products = products.map(p =>

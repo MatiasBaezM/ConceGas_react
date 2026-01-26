@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import { Modal, Button, Form, Alert, Row, Col } from 'react-bootstrap';
 import { formatearRut, validarRut } from '../../utils/rutUtils';
 import { isValidChileanPhone } from '../../utils/validationUtils';
 import { profileService } from '../../services/profileService';
@@ -14,6 +14,7 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
     const [formData, setFormData] = useState({
         rut: '',
         nombre: '',
+        apellido: '',
         email: '',
         telefono: '',
         pass: '',
@@ -77,14 +78,14 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
         }
 
         try {
-            // Construir el objeto de usuario
+            // Construimos el perfil del usuario uniendo Nombre y Apellido ingresados por separado
             const newUser: UserProfile = {
                 rut: formData.rut,
-                name: formData.nombre,
+                name: `${formData.nombre} ${formData.apellido}`.trim(),
                 email: formData.email,
                 telefono: formData.telefono,
                 pass: formData.pass,
-                role: 'cliente' // Por defecto registra clientes
+                role: 'cliente' // Todo usuario registrado desde la web es tipo cliente por defecto
             };
 
             // Intentar crear el usuario en el servicio (localStorage)
@@ -100,6 +101,7 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
                 setFormData({
                     rut: '',
                     nombre: '',
+                    apellido: '',
                     email: '',
                     telefono: '',
                     pass: '',
@@ -151,17 +153,34 @@ function RegisterModal({ show, handleClose }: RegisterModalProps) {
                         </Form.Text>
                     </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="nombre">
-                        <Form.Label>Nombre</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="nombre"
-                            placeholder="Ingrese nombre"
-                            value={formData.nombre}
-                            onChange={handleChange}
-                            required
-                        />
-                    </Form.Group>
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group controlId="nombre">
+                                <Form.Label>Nombre</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="nombre"
+                                    placeholder="Ingrese nombre"
+                                    value={formData.nombre}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group controlId="apellido">
+                                <Form.Label>Apellido</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="apellido"
+                                    placeholder="Ingrese apellido"
+                                    value={formData.apellido}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
 
                     <Form.Group className="mb-3" controlId="email">
                         <Form.Label>Correo electrónico</Form.Label>

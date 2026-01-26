@@ -1,7 +1,9 @@
 import type { Order } from '../types';
 
+// Clave para guardar los pedidos realizados
 const STORAGE_KEY = 'concegas_orders';
 
+// ENTRADA: Recupera pedidos anteriores del navegador
 const getStoredOrders = (): Order[] => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -10,6 +12,7 @@ const getStoredOrders = (): Order[] => {
     return [];
 };
 
+// SALIDA: Guarda la lista actualizada de pedidos
 const setStoredOrders = (orders: Order[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
 };
@@ -29,13 +32,14 @@ export const orderService = {
         return orders.filter(o => o.customerRut === rut);
     },
 
+    // PROCESAMIENTO: Crea un nuevo pedido y lo persiste inmediatamente
     create: (order: Order): void => {
         const orders = orderService.getAll();
         if (orders.some(o => o.id === order.id)) {
             throw new Error('El pedido con este ID ya existe');
         }
         orders.push(order);
-        setStoredOrders(orders);
+        setStoredOrders(orders); // Salida persistente
     },
 
     updateStatus: (id: string, newStatus: Order['status'], assignedTo?: string, failReason?: string): void => {

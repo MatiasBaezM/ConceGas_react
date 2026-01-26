@@ -3,9 +3,10 @@ import { FaCheckCircle } from 'react-icons/fa';
 
 interface OrderSuccessProps {
     onContinue: () => void;
+    onViewOrders: () => void;
 }
 
-export default function OrderSuccess({ onContinue }: OrderSuccessProps) {
+export default function OrderSuccess({ onContinue, onViewOrders }: OrderSuccessProps) {
     return (
         <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
             <Card className="text-center shadow-lg p-5 border-0 rounded-4 animate__animated animate__fadeIn">
@@ -21,7 +22,7 @@ export default function OrderSuccess({ onContinue }: OrderSuccessProps) {
                         <Button variant="success" size="lg" className="btn-premium" onClick={onContinue}>
                             Seguir Comprando
                         </Button>
-                        <Button variant="link" className="text-muted" onClick={onContinue}>
+                        <Button variant="link" className="text-muted" onClick={onViewOrders}>
                             Ver mis pedidos
                         </Button>
                     </div>

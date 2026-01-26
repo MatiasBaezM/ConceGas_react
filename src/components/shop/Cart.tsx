@@ -12,7 +12,12 @@ import LoginModal from '../auth/LoginModal';
 import RegisterModal from '../auth/RegisterModal';
 import RecoverPasswordModal from '../auth/RecoverPasswordModal';
 
-function Cart() {
+interface CartProps {
+    onContinueShopping?: () => void;
+    onViewOrders?: () => void;
+}
+
+function Cart({ onContinueShopping, onViewOrders }: CartProps) {
     const { cart, removeFromCart, updateQuantity, clearCart, total } = useCart();
     const { user, isAuthenticated } = useAuth();
 
@@ -36,7 +41,6 @@ function Cart() {
         alias: '',
         street: '',
         comuna: '',
-        city: '',
         reference: ''
     });
 
@@ -73,8 +77,8 @@ function Cart() {
 
     const handleSaveAddress = () => {
         if (!user) return;
-        if (!newAddress.street || !newAddress.comuna || !newAddress.city) {
-            alert('Por favor complete Dirección, Comuna y Ciudad');
+        if (!newAddress.street || !newAddress.comuna) {
+            alert('Por favor complete Dirección y Comuna');
             return;
         }
 
@@ -83,7 +87,6 @@ function Cart() {
             alias: newAddress.alias,
             street: newAddress.street,
             comuna: newAddress.comuna,
-            city: newAddress.city,
             reference: newAddress.reference
         };
 
@@ -108,7 +111,7 @@ function Cart() {
         setComunaForOrder(addr.comuna);
 
         // Limpiar y cerrar
-        setNewAddress({ alias: '', street: '', comuna: '', city: '', reference: '' });
+        setNewAddress({ alias: '', street: '', comuna: '', reference: '' });
         setShowAddressModal(false);
     };
 
@@ -144,7 +147,7 @@ function Cart() {
 
         // Create Order Object
         const newOrder: Order = {
-            id: `ord-${Date.now()}`,
+            id: Math.floor(1000 + Math.random() * 999000).toString(),
             date: new Date().toISOString(),
             customerRut: user.rut,
             customerName: user.name,
@@ -182,10 +185,18 @@ function Cart() {
     }
 
     if (checkoutState === 'success') {
-        return <OrderSuccess onContinue={() => {
-            setCheckoutState('idle');
-            window.location.href = '/';
-        }} />;
+        return <OrderSuccess
+            onContinue={() => {
+                setCheckoutState('idle');
+                if (onContinueShopping) onContinueShopping();
+                else window.location.href = '/';
+            }}
+            onViewOrders={() => {
+                setCheckoutState('idle');
+                if (onViewOrders) onViewOrders();
+                else window.location.href = '/';
+            }}
+        />;
     }
 
     if (cart.length === 0) {
@@ -195,7 +206,7 @@ function Cart() {
                 <div className="alert alert-secondary">
                     Tu carrito está vacío.
                 </div>
-                <Button variant="secondary" href="/">Seguir comprando</Button>
+                <Button variant="secondary" onClick={() => onContinueShopping ? onContinueShopping() : window.location.href = '/'}>Seguir comprando</Button>
             </Container>
         );
     }
@@ -331,7 +342,7 @@ function Cart() {
 
             <div className="d-flex gap-2">
                 <Button variant="outline-danger" onClick={clearCart}>Vaciar carrito</Button>
-                <Button variant="secondary" href="/">Seguir comprando</Button>
+                <Button variant="secondary" onClick={() => onContinueShopping ? onContinueShopping() : window.location.href = '/'}>Seguir comprando</Button>
                 <Button variant="success" onClick={handleOrder} className="btn-premium">Pagar y Pedir</Button>
             </div>
 
@@ -364,28 +375,28 @@ function Cart() {
                         </Form.Group>
 
                         <Row className="g-2">
-                            <Col xs={12} md={6}>
+                            <Col xs={12}>
                                 <Form.Group className="mb-3" controlId="addrComuna">
                                     <Form.Label>Comuna</Form.Label>
-                                    <Form.Control
-                                        type="text"
+                                    <Form.Select
                                         required
-                                        placeholder="Concepción"
                                         value={newAddress.comuna}
                                         onChange={(e) => setNewAddress({ ...newAddress, comuna: e.target.value })}
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col xs={12} md={6}>
-                                <Form.Group className="mb-3" controlId="addrCiudad">
-                                    <Form.Label>Ciudad</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        required
-                                        placeholder="Concepción"
-                                        value={newAddress.city}
-                                        onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                                    />
+                                    >
+                                        <option value="">Seleccione una comuna...</option>
+                                        <option value="Concepción">Concepción</option>
+                                        <option value="Chiguayante">Chiguayante</option>
+                                        <option value="Coronel">Coronel</option>
+                                        <option value="Florida">Florida</option>
+                                        <option value="Hualpén">Hualpén</option>
+                                        <option value="Hualqui">Hualqui</option>
+                                        <option value="Lota">Lota</option>
+                                        <option value="Penco">Penco</option>
+                                        <option value="San Pedro de la Paz">San Pedro de la Paz</option>
+                                        <option value="Santa Juana">Santa Juana</option>
+                                        <option value="Talcahuano">Talcahuano</option>
+                                        <option value="Tomé">Tomé</option>
+                                    </Form.Select>
                                 </Form.Group>
                             </Col>
                         </Row>

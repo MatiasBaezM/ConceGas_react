@@ -1,13 +1,16 @@
 import type { UserProfile } from '../types';
 import { isValidChileanPhone } from '../utils/validationUtils';
 
+// Clave única para los perfiles de usuario
 const STORAGE_KEY = 'concegas_users_v2';
 
 import initialData from '../../public/data/perfiles.json';
 
-// Cast the imported JSON to our typed interface
+// ENTRADA INICIAL: Carga de datos base desde el archivo JSON
+// Se castea para asegurar que cumpla con la interfaz UserProfile
 const INITIAL_USERS: UserProfile[] = initialData as UserProfile[];
 
+// FUNCIÓN DE ENTRADA: Lee los usuarios del navegador
 const getStoredUsers = (): UserProfile[] => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -16,6 +19,7 @@ const getStoredUsers = (): UserProfile[] => {
     return [];
 };
 
+// FUNCIÓN DE SALIDA: Sobreescribe los usuarios en el navegador
 const setStoredUsers = (users: UserProfile[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
 };
@@ -67,9 +71,11 @@ export const profileService = {
         setStoredUsers(users);
     },
 
+    // PROCESAMIENTO: Verifica si un email y contraseña son válidos
+    // Retorna los datos del usuario si coinciden (SALIDA) o undefined si no
     validateCredentials: (email: string, pass: string): UserProfile | undefined => {
         const users = profileService.getAll();
-        // Check case-insensitive email
+        // Compara el email en minúsculas para evitar errores de tipeo
         return users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.pass === pass);
     }
 };

@@ -6,6 +6,7 @@ import RegisterModal from '../components/auth/RegisterModal';
 import ProductCard from '../components/shop/ProductCard';
 import Footer from '../components/layout/Footer';
 import Cart from '../components/shop/Cart';
+import CustomerOrders from '../components/shop/CustomerOrders';
 import RecoverPasswordModal from '../components/auth/RecoverPasswordModal';
 import { productService } from '../services/productService';
 import type { Product } from '../types';
@@ -15,7 +16,7 @@ export default function HomePage() {
     const [showLogin, setShowLogin] = useState(false);
     const [showRegister, setShowRegister] = useState(false);
     const [showRecover, setShowRecover] = useState(false);
-    const [showCart, setShowCart] = useState(false);
+    const [currentView, setCurrentView] = useState<'home' | 'cart' | 'orders'>('home');
     const [products, setProducts] = useState<Product[]>([]);
 
     useEffect(() => {
@@ -27,8 +28,9 @@ export default function HomePage() {
             <Navbar
                 onLoginClick={() => setShowLogin(true)}
                 onRegisterClick={() => setShowRegister(true)}
-                onCartClick={() => setShowCart(!showCart)}
-                onHomeClick={() => setShowCart(false)}
+                onCartClick={() => setCurrentView('cart')}
+                onHomeClick={() => setCurrentView('home')}
+                onOrdersClick={() => setCurrentView('orders')}
             />
 
             {/* Modales de Autenticación */}
@@ -41,8 +43,8 @@ export default function HomePage() {
             <RegisterModal show={showRegister} handleClose={() => setShowRegister(false)} />
             <RecoverPasswordModal show={showRecover} handleClose={() => setShowRecover(false)} />
 
-            {/* Renderizado de contenido principal: ¿Mostrar carrito o lista de productos? */}
-            {!showCart ? (
+            {/* Renderizado de contenido principal basado en la vista actual */}
+            {currentView === 'home' && (
                 <>
                     <div className="text-center">
                         <img src="/img/banner.png" className="img-fluid w-100" alt="Banner ConceGas" />
@@ -59,10 +61,15 @@ export default function HomePage() {
                         </Row>
                     </Container>
                 </>
-            ) : (
-                // Si showCart es true, mostramos el componente del Carrito
-                <Cart />
             )}
+
+            {currentView === 'cart' && (
+                <Cart
+                    onContinueShopping={() => setCurrentView('home')}
+                    onViewOrders={() => setCurrentView('orders')}
+                />
+            )}
+            {currentView === 'orders' && <CustomerOrders />}
 
             {/* Footer solo visible para clientes */}
             <Footer />

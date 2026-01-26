@@ -5,6 +5,7 @@ export interface Product {
     description: string;
     image: string;
     stock?: number;
+    isActive?: boolean;
 }
 
 export type Role = 'cliente' | 'admin' | 'repartidor';
@@ -14,7 +15,6 @@ export interface Address {
     alias: string;
     street: string;
     comuna: string;
-    city: string;
     reference?: string;
 }
 

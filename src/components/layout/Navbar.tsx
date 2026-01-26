@@ -8,9 +8,10 @@ interface NavbarProps {
     onRegisterClick?: () => void;
     onCartClick?: () => void;
     onHomeClick?: () => void;
+    onOrdersClick?: () => void;
 }
 
-function Navbar({ onLoginClick, onRegisterClick, onCartClick, onHomeClick }: NavbarProps) {
+function Navbar({ onLoginClick, onRegisterClick, onCartClick, onHomeClick, onOrdersClick }: NavbarProps) {
     // Obtenemos la cantidad de items del carrito para mostrar en la burbuja roja
     const { itemCount } = useCart();
     // Obtenemos estado de autenticación para mostrar nombre de usuario o botón de login
@@ -84,6 +85,11 @@ function Navbar({ onLoginClick, onRegisterClick, onCartClick, onHomeClick }: Nav
                                     {isAdmin && (
                                         <NavDropdown.Item href="#">
                                             ⚙️ Panel Admin
+                                        </NavDropdown.Item>
+                                    )}
+                                    {!isRepartidor && (
+                                        <NavDropdown.Item href="#" onClick={(e) => { e.preventDefault(); onOrdersClick?.(); }}>
+                                            📦 Mis Pedidos
                                         </NavDropdown.Item>
                                     )}
                                     <NavDropdown.Item href="#">Cambia Contraseña</NavDropdown.Item>

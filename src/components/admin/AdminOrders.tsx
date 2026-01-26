@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Nav, Table, Button, Badge, Modal, Row, Col, Form } from 'react-bootstrap';
+import { Nav, Table, Button, Badge, Modal, Row, Col, Form, InputGroup } from 'react-bootstrap';
 import type { Order, UserProfile } from '../../types';
 import { orderService } from '../../services/orderService';
 import { profileService } from '../../services/profileService';
 
 function AdminOrders() {
-    const [activeTab, setActiveTab] = useState('pendiente');
+    const [activeTab, setActiveTab] = useState('todos');
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
     const [orders, setOrders] = useState<Order[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortOrder, setSortOrder] = useState('newest'); // newest, oldest, total-high, total-low
 
     // Repartidores state
     const [repartidores, setRepartidores] = useState<UserProfile[]>([]);
@@ -33,9 +35,38 @@ function AdminOrders() {
         return () => clearInterval(interval);
     }, []);
 
-    const filteredOrders = activeTab === 'finalizados'
-        ? orders.filter(o => o.status === 'entregados' || o.status === 'sin entrega')
-        : orders.filter(o => o.status === activeTab);
+    const filteredOrders = orders
+        .filter(o => {
+            // Filter by Tab
+            if (activeTab === 'todos') return true;
+            if (activeTab === 'finalizados') return o.status === 'entregados' || o.status === 'sin entrega';
+            return o.status === activeTab;
+        })
+        .filter(o => {
+            // Filter by Search Term
+            if (!searchTerm) return true;
+            const search = searchTerm.toLowerCase();
+            return (
+                o.id.toLowerCase().includes(search) ||
+                o.customerName.toLowerCase().includes(search) ||
+                o.address.toLowerCase().includes(search)
+            );
+        })
+        .sort((a, b) => {
+            // Sort logic
+            switch (sortOrder) {
+                case 'newest':
+                    return new Date(b.date).getTime() - new Date(a.date).getTime();
+                case 'oldest':
+                    return new Date(a.date).getTime() - new Date(b.date).getTime();
+                case 'total-high':
+                    return b.total - a.total;
+                case 'total-low':
+                    return a.total - b.total;
+                default:
+                    return 0;
+            }
+        });
 
     const handleShowDetail = (order: Order) => {
         setSelectedOrder(order);
@@ -59,22 +90,24 @@ function AdminOrders() {
                 <thead className="table-light">
                     <tr>
                         <th>ID</th>
+                        <th>Fecha</th>
                         <th>Cliente</th>
-                        {activeTab === 'pendiente' && <th>Dirección</th>}
-                        {(activeTab === 'preparacion' || activeTab === 'enviados' || activeTab === 'finalizados') && <th>Repartidor</th>}
+                        {(activeTab === 'pendiente' || activeTab === 'todos') && <th>Dirección</th>}
+                        {(activeTab === 'preparacion' || activeTab === 'enviados' || activeTab === 'finalizados' || activeTab === 'todos') && <th>Repartidor</th>}
                         <th>Total</th>
                         <th>Estado</th>
-                        {activeTab === 'finalizados' && <th>Motivo</th>}
-                        {activeTab !== 'finalizados' && <th>Acciones</th>}
+                        {(activeTab === 'finalizados' || activeTab === 'todos') && <th>Motivo</th>}
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {filteredOrders.map((order) => (
                         <tr key={order.id}>
                             <td>{order.id}</td>
+                            <td>{new Date(order.date).toLocaleDateString()} {new Date(order.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                             <td>{order.customerName}</td>
-                            {activeTab === 'pendiente' && <td>{order.address}</td>}
-                            {(activeTab === 'preparacion' || activeTab === 'enviados' || activeTab === 'finalizados') && (
+                            {(activeTab === 'pendiente' || activeTab === 'todos') && <td>{order.address}</td>}
+                            {(activeTab === 'preparacion' || activeTab === 'enviados' || activeTab === 'finalizados' || activeTab === 'todos') && (
                                 <td>
                                     {activeTab === 'preparacion' ? (
                                         <Form.Select
@@ -103,7 +136,7 @@ function AdminOrders() {
                                     {order.status.toUpperCase()}
                                 </Badge>
                             </td>
-                            {activeTab === 'finalizados' && (
+                            {(activeTab === 'finalizados' || activeTab === 'todos') && (
                                 <td>
                                     {order.status === 'sin entrega'
                                         ? <span className="text-danger small fw-bold">{order.failReason || 'Sin motivo especificado'}</span>
@@ -111,28 +144,26 @@ function AdminOrders() {
                                     }
                                 </td>
                             )}
-                            {activeTab !== 'finalizados' && (
-                                <td>
-                                    <Button variant="primary" size="sm" onClick={() => handleShowDetail(order)}>
-                                        Ver Detalle
+                            <td>
+                                <Button variant="primary" size="sm" onClick={() => handleShowDetail(order)}>
+                                    Ver Detalle
+                                </Button>
+                                {activeTab === 'pendiente' && (
+                                    <Button
+                                        variant="success"
+                                        size="sm"
+                                        className="ms-1"
+                                        onClick={() => handleAccept(order.id)}
+                                    >
+                                        Aceptar
                                     </Button>
-                                    {activeTab === 'pendiente' && (
-                                        <Button
-                                            variant="success"
-                                            size="sm"
-                                            className="ms-1"
-                                            onClick={() => handleAccept(order.id)}
-                                        >
-                                            Aceptar
-                                        </Button>
-                                    )}
-                                </td>
-                            )}
+                                )}
+                            </td>
                         </tr>
                     ))}
                     {filteredOrders.length === 0 && (
                         <tr>
-                            <td colSpan={activeTab === 'finalizados' ? 7 : 6} className="text-center">No hay pedidos en esta categoría</td>
+                            <td colSpan={activeTab === 'finalizados' || activeTab === 'todos' ? 9 : 8} className="text-center">No hay pedidos que coincidan con los criterios</td>
                         </tr>
                     )}
                 </tbody>
@@ -146,6 +177,9 @@ function AdminOrders() {
 
             <Nav variant="tabs" activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'pendiente')} className="mb-4">
                 <Nav.Item>
+                    <Nav.Link eventKey="todos">Todos</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
                     <Nav.Link eventKey="pendiente">Pendientes</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
@@ -158,6 +192,40 @@ function AdminOrders() {
                     <Nav.Link eventKey="finalizados">Finalizados</Nav.Link>
                 </Nav.Item>
             </Nav>
+
+            <Row className="mb-4 g-3">
+                <Col md={8}>
+                    <Form.Group>
+                        <InputGroup>
+                            <InputGroup.Text className="bg-white border-end-0">
+                                🔍
+                            </InputGroup.Text>
+                            <Form.Control
+                                className="border-start-0 ps-0"
+                                placeholder="Buscar por ID, nombre de cliente o dirección..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </InputGroup>
+                    </Form.Group>
+                </Col>
+                <Col md={4}>
+                    <Form.Group className="d-flex align-items-center">
+                        <Form.Label className="me-2 mb-0 text-nowrap">Ordenar por:</Form.Label>
+                        <Form.Select
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value)}
+                        >
+                            <option value="newest">Más recientes primero</option>
+                            <option value="oldest">Más antiguos primero</option>
+                            <option value="total-high">Monto más alto</option>
+                            <option value="total-low">Monto más bajo</option>
+                        </Form.Select>
+                    </Form.Group>
+                </Col>
+            </Row>
+
+
 
             {renderOrderTable()}
 

@@ -1,22 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
 import { Table, Button, Badge, Modal, Form, Row, Col } from 'react-bootstrap';
+import { IoEye, IoEyeOff } from 'react-icons/io5';
 import { formatPrice } from '../../utils/formatters';
 import { productService } from '../../services/productService';
 import type { Product } from '../../types';
 
 function AdminProducts() {
+    // Estado local para almacenar la lista de productos
     const [products, setProducts] = useState<Product[]>([]);
+
+    // Estados para controlar la visibilidad de los modales
     const [showCreateModal, setShowCreateModal] = useState(false);
-
-    // Edit state
     const [showEditModal, setShowEditModal] = useState(false);
-    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
-    // Delete state
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // Estado para saber qué producto estamos editando o eliminando
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
 
-    // Form states
+    // Estado para los datos del formulario (creación y edición)
     const [formData, setFormData] = useState<Partial<Product>>({
         name: '',
         price: 0,
@@ -38,14 +40,16 @@ function AdminProducts() {
         setProducts(productService.getAll());
     };
 
+    // Maneja la selección de archivos de imagen
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             setSelectedFile(file);
+            // Creamos una URL temporal para mostrar la vista previa inmediata
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
 
-            // Convert to Base64 for storage
+            // Convertimos la imagen a Base64 para poder guardarla en localStorage
             const reader = new FileReader();
             reader.onloadend = () => {
                 setFormData(prev => ({ ...prev, image: reader.result as string }));
@@ -94,19 +98,23 @@ function AdminProducts() {
         setShowDeleteModal(true);
     };
 
+    // Envía el formulario para crear un nuevo producto
     const handleCreateSubmit = () => {
         try {
             const newProduct: Product = {
+                // Generamos un ID único basado en el tiempo actual
                 id: `prod-${Date.now()}`,
                 name: formData.name || 'Nuevo Producto',
                 price: Number(formData.price) || 0,
                 description: formData.description || '',
-                image: formData.image || '/img/productos/cilindro_15kg.png', // Default image
-                stock: Number(formData.stock) || 0
+                // Si no se eligió imagen, queda vacío (se mostrará "Sin Imagen" en la tienda)
+                image: formData.image || '',
+                stock: Number(formData.stock) || 0,
+                isActive: true // Por defecto, los productos nuevos son visibles
             };
 
             productService.create(newProduct);
-            loadProducts();
+            loadProducts(); // Recargamos la lista
             setShowCreateModal(false);
             resetForm();
             alert('Producto creado correctamente');
@@ -144,6 +152,22 @@ function AdminProducts() {
         }
     };
 
+    // Cambia la visibilidad del producto (Shadow) sin alterar el stock activo
+    const handleToggleShadow = (product: Product) => {
+        try {
+            // Si está oculto (false), lo activamos (true); si no, lo ocultamos
+            const newIsActive = product.isActive === false ? true : false;
+
+            productService.update(product.id, {
+                isActive: newIsActive
+            });
+            loadProducts(); // Actualizamos la tabla
+        } catch (error) {
+            console.error(error);
+            alert('Error al cambiar estado del producto');
+        }
+    };
+
     return (
         <div>
             <h2 className="mb-4 text-dark">Gestión de Productos</h2>
@@ -164,14 +188,31 @@ function AdminProducts() {
                             <tr key={prod.id}>
                                 <td>
                                     <div className="d-flex align-items-center">
-                                        {prod.image && <img src={prod.image} alt={prod.name} width="40" className="me-2 rounded" />}
+                                        {prod.image ? (
+                                            <img src={prod.image} alt={prod.name} width="40" className="me-2 rounded" />
+                                        ) : (
+                                            <div className="me-2 rounded bg-light d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                                                <small className="text-muted" style={{ fontSize: '8px' }}>N/A</small>
+                                            </div>
+                                        )}
                                         {prod.name}
+                                        {/* Visual indicator if hidden */}
+                                        {prod.isActive === false && <Badge bg="secondary" className="ms-2">Oculto</Badge>}
                                     </div>
                                 </td>
                                 <td>{formatPrice(prod.price)}</td>
                                 <td><small className="text-muted">{prod.description}</small></td>
                                 <td><Badge bg={prod.stock && prod.stock > 5 ? "success" : "warning"}>Stock: {prod.stock || 0}</Badge></td>
                                 <td>
+                                    <Button
+                                        variant={prod.isActive !== false ? "outline-primary" : "secondary"}
+                                        size="sm"
+                                        className="me-2"
+                                        onClick={() => handleToggleShadow(prod)}
+                                        title={prod.isActive !== false ? "Ocultar en tienda" : "Mostrar en tienda"}
+                                    >
+                                        {prod.isActive !== false ? <IoEye size={16} /> : <IoEyeOff size={16} />}
+                                    </Button>
                                     <Button variant="warning" size="sm" className="me-2" onClick={() => handleEditClick(prod)}>
                                         Editar
                                     </Button>
@@ -207,12 +248,15 @@ function AdminProducts() {
                             />
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Label>Precio ($)</Form.Label>
+                            <Form.Label>Precio</Form.Label>
                             <Form.Control
-                                type="number"
-                                value={formData.price}
-                                onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
-                                placeholder="20000"
+                                type="text"
+                                value={formData.price ? new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(formData.price) : ''}
+                                onChange={e => {
+                                    const rawValue = e.target.value.replace(/\D/g, '');
+                                    setFormData({ ...formData, price: Number(rawValue) });
+                                }}
+                                placeholder="$ 20.000"
                                 required
                             />
                         </Form.Group>
@@ -291,11 +335,14 @@ function AdminProducts() {
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Precio ($)</Form.Label>
+                                <Form.Label>Precio</Form.Label>
                                 <Form.Control
-                                    type="number"
-                                    value={formData.price}
-                                    onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                                    type="text"
+                                    value={formData.price ? new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(formData.price) : ''}
+                                    onChange={e => {
+                                        const rawValue = e.target.value.replace(/\D/g, '');
+                                        setFormData({ ...formData, price: Number(rawValue) });
+                                    }}
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3">

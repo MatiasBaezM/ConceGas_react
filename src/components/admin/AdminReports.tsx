@@ -1,6 +1,53 @@
+import { useState, useEffect } from 'react';
 import { Row, Col, Card, ProgressBar, Table, Badge } from 'react-bootstrap';
+import { orderService } from '../../services/orderService';
+import { productService } from '../../services/productService';
+import type { Order, Product } from '../../types';
 
 function AdminReports() {
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
+
+    useEffect(() => {
+        setOrders(orderService.getAll());
+        setProducts(productService.getAll());
+    }, []);
+
+    // Cálculos dinámicos
+    const today = new Date().toLocaleDateString();
+
+    // Filtrar pedidos de hoy
+    const todayOrders = orders.filter(o => new Date(o.date).toLocaleDateString() === today);
+
+    // Sumatoria de ventas del día (solo entregados)
+    const dailyRevenue = todayOrders
+        .filter(o => o.status === 'entregados')
+        .reduce((sum, o) => sum + o.total, 0);
+
+    // Pedidos completados hoy
+    const completedToday = todayOrders.filter(o => o.status === 'entregados').length;
+
+    // Pedidos pendientes (total, no solo hoy)
+    const pendingOrders = orders.filter(o =>
+        o.status === 'pendiente' ||
+        o.status === 'preparacion' ||
+        o.status === 'enviados'
+    ).length;
+
+    // Stock crítico (stock < 10)
+    const criticalStockCount = products.filter(p => p.stock !== undefined && p.stock < 10).length;
+
+    // Ventas por zona (Top 5)
+    const salesByZone = orders.reduce((acc: Record<string, number>, o) => {
+        const zone = o.comuna || 'Sin Comuna';
+        acc[zone] = (acc[zone] || 0) + 1;
+        return acc;
+    }, {});
+
+    const sortedZones = Object.entries(salesByZone)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
     return (
         <div className="fade-in">
             <h2 className="mb-4 text-dark">📊 Reportes y Estadísticas</h2>
@@ -8,45 +55,45 @@ function AdminReports() {
             {/* KPIs Principales */}
             <Row className="mb-4">
                 <Col md={3}>
-                    <Card className="text-white bg-primary mb-3 shadow-sm">
-                        <Card.Header>Ventas del Día</Card.Header>
+                    <Card className="text-white bg-primary mb-3 shadow-sm border-0">
+                        <Card.Header className="bg-transparent border-0 opacity-75">Ventas del Día</Card.Header>
                         <Card.Body>
-                            <Card.Title className="display-6 fw-bold">$450.000</Card.Title>
+                            <Card.Title className="display-6 fw-bold">${dailyRevenue.toLocaleString('es-CL')}</Card.Title>
                             <Card.Text>
-                                <small>+15% vs ayer</small>
+                                <small>Hoy: {today}</small>
                             </Card.Text>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={3}>
-                    <Card className="text-white bg-success mb-3 shadow-sm">
-                        <Card.Header>Pedidos Completados</Card.Header>
+                    <Card className="text-white bg-success mb-3 shadow-sm border-0">
+                        <Card.Header className="bg-transparent border-0 opacity-75">Pedidos Completados</Card.Header>
                         <Card.Body>
-                            <Card.Title className="display-6 fw-bold">24</Card.Title>
+                            <Card.Title className="display-6 fw-bold">{completedToday}</Card.Title>
                             <Card.Text>
-                                <small>98% Tasa de éxito</small>
+                                <small>Total históricos: {orders.filter(o => o.status === 'entregados').length}</small>
                             </Card.Text>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={3}>
-                    <Card className="text-white bg-warning mb-3 shadow-sm">
-                        <Card.Header className="text-dark">Pedidos Pendientes</Card.Header>
+                    <Card className="text-white bg-warning mb-3 shadow-sm border-0">
+                        <Card.Header className="text-dark bg-transparent border-0 opacity-75">En Curso</Card.Header>
                         <Card.Body>
-                            <Card.Title className="display-6 fw-bold text-dark">5</Card.Title>
+                            <Card.Title className="display-6 fw-bold text-dark">{pendingOrders}</Card.Title>
                             <Card.Text className="text-dark">
-                                <small>Tiempo prom: 45 min</small>
+                                <small>Pendientes de entrega</small>
                             </Card.Text>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={3}>
-                    <Card className="text-white bg-danger mb-3 shadow-sm">
-                        <Card.Header>Stock Crítico</Card.Header>
+                    <Card className="text-white bg-danger mb-3 shadow-sm border-0">
+                        <Card.Header className="bg-transparent border-0 opacity-75">Stock Crítico</Card.Header>
                         <Card.Body>
-                            <Card.Title className="display-6 fw-bold">2</Card.Title>
+                            <Card.Title className="display-6 fw-bold">{criticalStockCount}</Card.Title>
                             <Card.Text>
-                                <small>Productos bajos</small>
+                                <small>Productos con bajo stock</small>
                             </Card.Text>
                         </Card.Body>
                     </Card>
@@ -54,31 +101,38 @@ function AdminReports() {
             </Row>
 
             <Row>
-                {/* Ventas por Formato de Cilindro */}
+                {/* Ventas por Formato de Cilindro (Simulado con lógica base) */}
                 <Col md={6} className="mb-4">
-                    <Card className="shadow-sm h-100">
-                        <Card.Header className="bg-white fw-bold">🔥 Ventas por Formato</Card.Header>
+                    <Card className="shadow-sm h-100 border-0">
+                        <Card.Header className="bg-white fw-bold border-0">🔥 Distribución de Ventas</Card.Header>
                         <Card.Body>
                             <div className="mb-3">
                                 <div className="d-flex justify-content-between mb-1">
-                                    <span>Gas 15kg (Hogar)</span>
-                                    <span className="fw-bold">60%</span>
+                                    <span>Gas 15kg</span>
+                                    <span className="fw-bold">45%</span>
                                 </div>
-                                <ProgressBar variant="primary" now={60} />
+                                <ProgressBar variant="primary" now={45} />
                             </div>
                             <div className="mb-3">
                                 <div className="d-flex justify-content-between mb-1">
-                                    <span>Gas 45kg (Industrial/Calefacción)</span>
-                                    <span className="fw-bold">25%</span>
+                                    <span>Gas 11kg</span>
+                                    <span className="fw-bold">30%</span>
                                 </div>
-                                <ProgressBar variant="info" now={25} />
+                                <ProgressBar variant="info" now={30} />
                             </div>
                             <div className="mb-3">
                                 <div className="d-flex justify-content-between mb-1">
-                                    <span>Gas 11kg / 5kg (Parrilla/Camping)</span>
+                                    <span>Gas 45kg</span>
                                     <span className="fw-bold">15%</span>
                                 </div>
                                 <ProgressBar variant="warning" now={15} />
+                            </div>
+                            <div className="mb-3">
+                                <div className="d-flex justify-content-between mb-1">
+                                    <span>Gas 5kg</span>
+                                    <span className="fw-bold">10%</span>
+                                </div>
+                                <ProgressBar variant="success" now={10} />
                             </div>
                         </Card.Body>
                     </Card>
@@ -86,43 +140,30 @@ function AdminReports() {
 
                 {/* Zonas de Mayor Demanda */}
                 <Col md={6} className="mb-4">
-                    <Card className="shadow-sm h-100">
-                        <Card.Header className="bg-white fw-bold">📍 Zonas de Mayor Demanda</Card.Header>
+                    <Card className="shadow-sm h-100 border-0">
+                        <Card.Header className="bg-white fw-bold border-0">📍 Zonas de Mayor Demanda (Histórico)</Card.Header>
                         <Card.Body>
                             <Table hover size="sm">
                                 <thead>
                                     <tr>
-                                        <th>Sector</th>
+                                        <th>Provincia/Comuna</th>
                                         <th>Pedidos</th>
-                                        <th>Tendencia</th>
+                                        <th>Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>Centro Concepción</td>
-                                        <td>145</td>
-                                        <td><Badge bg="success">⬆ Alta</Badge></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Lomas de San Andrés</td>
-                                        <td>98</td>
-                                        <td><Badge bg="primary">➡ Estable</Badge></td>
-                                    </tr>
-                                    <tr>
-                                        <td>San Pedro de la Paz</td>
-                                        <td>76</td>
-                                        <td><Badge bg="success">⬆ Alta</Badge></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Hualpén</td>
-                                        <td>45</td>
-                                        <td><Badge bg="warning">⬇ Baja</Badge></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Chiguayante</td>
-                                        <td>30</td>
-                                        <td><Badge bg="secondary">➡ Estable</Badge></td>
-                                    </tr>
+                                    {sortedZones.map(([zone, count]) => (
+                                        <tr key={zone}>
+                                            <td>{zone}</td>
+                                            <td>{count}</td>
+                                            <td><Badge bg="success">Activo</Badge></td>
+                                        </tr>
+                                    ))}
+                                    {sortedZones.length === 0 && (
+                                        <tr>
+                                            <td colSpan={3} className="text-center">No hay datos suficientes</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </Table>
                         </Card.Body>
@@ -131,32 +172,24 @@ function AdminReports() {
             </Row>
 
             <Row>
-                {/* Stock actual */}
+                {/* Stock actual Real */}
                 <Col md={12}>
-                    <Card className="shadow-sm">
-                        <Card.Header className="bg-white fw-bold">📦 Inventario de Cilindros</Card.Header>
+                    <Card className="shadow-sm border-0">
+                        <Card.Header className="bg-white fw-bold border-0">📦 Estado de Inventario (Real)</Card.Header>
                         <Card.Body>
                             <Row className="text-center">
-                                <Col>
-                                    <h5 className="text-secondary">Gas 5kg</h5>
-                                    <h3 className="text-dark">150</h3>
-                                    <Badge bg="success">Stock OK</Badge>
-                                </Col>
-                                <Col className="border-start border-end">
-                                    <h5 className="text-secondary">Gas 11kg</h5>
-                                    <h3 className="text-dark">85</h3>
-                                    <Badge bg="success">Stock OK</Badge>
-                                </Col>
-                                <Col className="border-end">
-                                    <h5 className="text-secondary">Gas 15kg</h5>
-                                    <h3 className="text-danger">12</h3>
-                                    <Badge bg="danger">Crítico</Badge>
-                                </Col>
-                                <Col>
-                                    <h5 className="text-secondary">Gas 45kg</h5>
-                                    <h3 className="text-warning">25</h3>
-                                    <Badge bg="warning" text="dark">Bajo</Badge>
-                                </Col>
+                                {products.slice(0, 4).map(p => (
+                                    <Col key={p.id} className="border-start">
+                                        <h5 className="text-secondary small">{p.name}</h5>
+                                        <h3 className={`fw-bold ${p.stock && p.stock < 10 ? 'text-danger' : 'text-dark'}`}>
+                                            {p.stock ?? 0}
+                                        </h3>
+                                        <Badge bg={p.stock && p.stock < 10 ? 'danger' : 'success'}>
+                                            {p.stock && p.stock < 10 ? 'Crítico' : 'OK'}
+                                        </Badge>
+                                    </Col>
+                                ))}
+                                {products.length === 0 && <Col>No hay productos registrados</Col>}
                             </Row>
                         </Card.Body>
                     </Card>
@@ -167,4 +200,5 @@ function AdminReports() {
 }
 
 export default AdminReports;
+
 
