@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Modal, Button, Form, Alert, Row, Col } from 'react-bootstrap';
-import { formatearRut, validarRut } from '../../utils/rutUtils';
-import { isValidChileanPhone } from '../../utils/validationUtils';
-import { profileService } from '../../services/profileService';
-import { useNotification } from '../../context/NotificationContext';
-import type { UserProfile } from '../../types';
+import { formatearRut, validarRut } from '../../core/utils/rutUtils';
+import { isValidChileanPhone } from '../../core/utils/validationUtils';
+import { profileService } from '../../core/services/profileService';
+import { useNotification } from '../../core/context/NotificationContext';
+import type { UserProfile } from '../../core/types';
 
 interface RegisterModalProps {
     show: boolean;

@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Table, Button, Badge, Modal, Form, Row, Col } from 'react-bootstrap';
 import { IoEye, IoEyeOff } from 'react-icons/io5';
-import { formatPrice } from '../../utils/formatters';
-import { productService } from '../../services/productService';
-import { useNotification } from '../../context/NotificationContext';
-import type { Product } from '../../types';
+import { formatPrice } from '../../core/utils/formatters';
+import { productService } from '../../core/services/productService';
+import { useNotification } from '../../core/context/NotificationContext';
+import type { Product } from '../../core/types';
 
 function AdminProducts() {
     const { notify } = useNotification();

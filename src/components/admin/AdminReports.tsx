@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Row, Col, Card, ProgressBar, Table, Badge } from 'react-bootstrap';
-import { orderService } from '../../services/orderService';
-import { productService } from '../../services/productService';
-import type { Order, Product } from '../../types';
+import { orderService } from '../../core/services/orderService';
+import { productService } from '../../core/services/productService';
+import type { Order, Product } from '../../core/types';
 
 function AdminReports() {
     const [orders, setOrders] = useState<Order[]>([]);

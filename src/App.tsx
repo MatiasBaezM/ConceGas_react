@@ -1,4 +1,4 @@
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from './core/hooks/useAuth';
 import HomePage from './pages/HomePage';
 import AdminPage from './pages/AdminPage';
 import RepartidorPage from './pages/RepartidorPage';

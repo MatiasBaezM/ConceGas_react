@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Table, Button, Badge, Modal, Form } from 'react-bootstrap';
-import { profileService } from '../../services/profileService';
-import { useNotification } from '../../context/NotificationContext';
-import type { UserProfile, Role } from '../../types';
-import { formatearRut, validarRut } from '../../utils/rutUtils';
-import { isValidChileanPhone } from '../../utils/validationUtils';
+import { profileService } from '../../core/services/profileService';
+import { useNotification } from '../../core/context/NotificationContext';
+import type { UserProfile, Role } from '../../core/types';
+import { formatearRut, validarRut } from '../../core/utils/rutUtils';
+import { isValidChileanPhone } from '../../core/utils/validationUtils';
 
 function AdminProfiles() {
     const { notify } = useNotification();

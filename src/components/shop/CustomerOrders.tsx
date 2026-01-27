@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Container, Card, Badge, Row, Col, Button, Modal, ProgressBar } from 'react-bootstrap';
-import { useAuth } from '../../hooks/useAuth';
-import { orderService } from '../../services/orderService';
-import type { Order } from '../../types';
+import { useAuth } from '../../core/hooks/useAuth';
+import { orderService } from '../../core/services/orderService';
+import type { Order } from '../../core/types';
 
 function CustomerOrders() {
     const { user } = useAuth();

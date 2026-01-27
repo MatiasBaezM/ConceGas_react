@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Container, Table, Button, Card, Row, Col, Form, Alert, Modal } from 'react-bootstrap';
-import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../hooks/useAuth';
-import { orderService } from '../../services/orderService';
-import { profileService } from '../../services/profileService';
-import { useNotification } from '../../context/NotificationContext';
-import type { Order, Address } from '../../types';
+import { useCart } from '../../core/context/CartContext';
+import { useAuth } from '../../core/hooks/useAuth';
+import { orderService } from '../../core/services/orderService';
+import { profileService } from '../../core/services/profileService';
+import { useNotification } from '../../core/context/NotificationContext';
+import type { Order, Address } from '../../core/types';
 import OrderProcessing from './OrderProcessing';
 import OrderSuccess from './OrderSuccess';
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal, Button, Form, Alert, InputGroup } from 'react-bootstrap';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../core/hooks/useAuth';
 
 
 interface LoginModalProps {
@@ -16,21 +16,30 @@ function LoginModal({ show, handleClose, onRecoverClick, onRegisterClick }: Logi
     const [pass, setPass] = useState('');
     const [error, setError] = useState('');
     const [showPass, setShowPass] = useState(false); // Estado para mostrar/ocultar contraseña
+    const [loading, setLoading] = useState(false); // Estado de carga
 
     // Manejar envío del formulario
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
-        // Intentar loguear con el contexto
-        const success = login(email, pass);
-        if (success) {
-            handleClose();
-            // Limpiar campos si fue exitoso
-            setEmail('');
-            setPass('');
-        } else {
-            setError('Credenciales inválidas. Intente nuevamente.');
+        try {
+            // Intentar loguear con el contexto (ahora es async)
+            const success = await login(email, pass);
+            if (success) {
+                handleClose();
+                // Limpiar campos si fue exitoso
+                setEmail('');
+                setPass('');
+            } else {
+                setError('Credenciales inválidas. Intente nuevamente.');
+            }
+        } catch (err) {
+            console.error('Error durante el login:', err);
+            setError('Ocurrió un error al intentar iniciar sesión.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -75,8 +84,12 @@ function LoginModal({ show, handleClose, onRecoverClick, onRegisterClick }: Logi
                     </Form.Group>
 
                     <div className="mt-4">
-                        <Button className="w-100 mb-2 btn-premium" type="submit">
-                            Iniciar
+                        <Button
+                            className="w-100 mb-2 btn-premium"
+                            type="submit"
+                            disabled={loading}
+                        >
+                            {loading ? "Iniciando..." : "Iniciar"}
                         </Button>
                         <div className="text-center d-flex flex-column gap-2">
                             {/* Enlaces de ayuda que disparan eventos al padre (App) */}

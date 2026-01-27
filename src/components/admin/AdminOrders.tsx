@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Nav, Table, Button, Badge, Modal, Row, Col, Form, InputGroup } from 'react-bootstrap';
-import type { Order, UserProfile } from '../../types';
-import { orderService } from '../../services/orderService';
-import { profileService } from '../../services/profileService';
+import type { Order, UserProfile } from '../../core/types';
+import { orderService } from '../../core/services/orderService';
+import { profileService } from '../../core/services/profileService';
 
 function AdminOrders() {
     const [activeTab, setActiveTab] = useState('todos');
@@ -16,16 +16,16 @@ function AdminOrders() {
     // Repartidores state
     const [repartidores, setRepartidores] = useState<UserProfile[]>([]);
 
+    const loadOrders = useCallback(() => {
+        setOrders(orderService.getAll());
+    }, []);
+
     useEffect(() => {
         loadOrders();
         // Load repartidores
         const allUsers = profileService.getAll();
         setRepartidores(allUsers.filter(u => u.role === 'repartidor'));
-    }, []);
-
-    const loadOrders = () => {
-        setOrders(orderService.getAll());
-    };
+    }, [loadOrders]);
 
     // Auto-refresh periodically to see new orders
     useEffect(() => {
@@ -33,7 +33,7 @@ function AdminOrders() {
             loadOrders();
         }, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [loadOrders]);
 
     const filteredOrders = orders
         .filter(o => {

@@ -1,22 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Container, Table, Button, Badge, Modal, Form, Card, Nav } from 'react-bootstrap';
 import Navbar from '../components/layout/Navbar';
-import { useAuth } from '../hooks/useAuth';
-import type { Order } from '../types';
-import { orderService } from '../services/orderService';
+import { useAuth } from '../core/hooks/useAuth';
+import type { Order } from '../core/types';
+import { orderService } from '../core/services/orderService';
 import ChangePasswordModal from '../components/auth/ChangePasswordModal';
 
 export default function RepartidorPage() {
     const { user } = useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
 
-    useEffect(() => {
-        loadOrders();
+    const loadOrders = useCallback(() => {
+        setOrders(orderService.getAll());
     }, []);
 
-    const loadOrders = () => {
-        setOrders(orderService.getAll());
-    };
+    useEffect(() => {
+        loadOrders();
+    }, [loadOrders]);
 
     // Auto-refresh periodically
     useEffect(() => {
@@ -24,7 +24,8 @@ export default function RepartidorPage() {
             loadOrders();
         }, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [loadOrders]);
+
     const [showFailModal, setShowFailModal] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showChangePassword, setShowChangePassword] = useState(false);
@@ -32,7 +33,7 @@ export default function RepartidorPage() {
     const [reason, setReason] = useState('');
     const [activeTab, setActiveTab] = useState('recibidos');
 
-    const updateOrderStatus = (orderId: string, newStatus: Order['status'], failReason?: string) => {
+    const updateOrderStatus = useCallback((orderId: string, newStatus: Order['status'], failReason?: string) => {
         // En un caso real, el failReason se guardaría en el backend. 
         // Aquí asumimos que updateStatus del servicio podría manejarlo si lo extendemos, 
         // o simplemente cambiamos el estado.
@@ -49,7 +50,7 @@ export default function RepartidorPage() {
         // Si es 'sin entrega' y tenemos reason, podríamos necesitar una forma de persistirlo.
         // Como el usuario pidió "haz que se vean...", asumiremos que el cambio de estado es lo crítico.
         loadOrders();
-    };
+    }, [loadOrders]);
 
     const handleDeliverySuccess = (order: Order) => {
         updateOrderStatus(order.id, 'entregados');

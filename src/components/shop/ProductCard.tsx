@@ -1,5 +1,5 @@
 import { Card, Button } from 'react-bootstrap';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../core/context/CartContext';
 import { useState } from 'react';
 
 interface ProductCardProps {

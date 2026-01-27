@@ -9,8 +9,8 @@ import Cart from '../components/shop/Cart';
 import CustomerOrders from '../components/shop/CustomerOrders';
 import RecoverPasswordModal from '../components/auth/RecoverPasswordModal';
 import ChangePasswordModal from '../components/auth/ChangePasswordModal';
-import { productService } from '../services/productService';
-import type { Product } from '../types';
+import { productService } from '../core/services/productService';
+import type { Product } from '../core/types';
 
 export default function HomePage() {
     // Estados para controlar qué modales o vistas se muestran
